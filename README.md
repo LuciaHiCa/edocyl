@@ -97,18 +97,46 @@ headless) en claro y oscuro.
 
 ## Decisiones de diseño (por si se retoma el estilo)
 - Paleta y método siguiendo el skill `dataviz` del proyecto: azul secuencial
-  (magnitud, mapa/barras) + naranja `#eb6834`/`#d95926` (acento de
-  selección/énfasis, no de magnitud). Rampa secuencial de 13 pasos documentada
+  (magnitud, mapa/barras/small-multiples) + naranja `#e15c1e`/`#ec7a3e` (acento
+  de selección/énfasis, no de magnitud). Rampa secuencial de 13 pasos documentada
   en el propio `template.html`; en oscuro se usa la rampa invertida ("flips
-  anchor in dark").
-- Tipografía: "Source Serif 4" (títulos), "IBM Plex Sans" (cuerpo/UI),
-  "IBM Plex Mono" (cifras/KPIs).
-- Evolución temporal con 9 provincias usa patrón "emphasis": líneas grises por
-  defecto, una se resalta en naranja al hacer hover/pin (no se usó color
-  categórico para 9 series, iría contra el límite del método de 3 series en
-  formas "all-pairs").
+  anchor in dark"). Neutros fríos, no cálidos.
+- Tipografía: "IBM Plex Sans" (títulos + cuerpo + UI), "IBM Plex Mono"
+  (cifras/KPIs/ejes). Se retiró la serif "Source Serif 4" en el rediseño de
+  sep-2026 (petición del usuario: aspecto más moderno).
+- Evolución temporal: **cada provincia con su color fijo** (petición explícita
+  del usuario). Son 9 series en un gráfico de comparación libre, por encima del
+  límite categórico CVD-seguro del método `dataviz` (que para formas "all-pairs"
+  recomienda 3 y agrupar el resto). El validador (`scripts/validate_palette.js`)
+  no aprueba ningún juego de 9 colores en modo `--pairs all`; el peor par en
+  visión normal, rojo↔naranja ΔE 7.1, viene ya de los 8 colores de referencia.
+  Se asume la petición del usuario y se compensa con **codificación secundaria**:
+  leyenda con color + nombre siempre visible, etiquetas directas al final de las
+  líneas seleccionadas, y el resto de líneas atenuadas a gris al elegir una o
+  varias. Colores = los 8 tonos validados de la referencia (versión clara/oscura)
+  + un 9.º cian; asignados por índice de provincia (alfabético), nunca por
+  ranking. Selección múltiple: `state.selected` (array); alterna al pulsar en
+  leyenda, mapa o ranking.
+- Ranking provincial: la barra de relleno necesita `display:block` (era un
+  `<span>` en línea y el ancho no se aplicaba). Además, cuando `maxVal <= 0`
+  (todas las provincias a 0) se muestra un aviso en vez de barras planas — ver
+  "Rareza de los datos" abajo.
+- Small multiples "El mapa, año a año": un mini-mapa por año, **misma escala de
+  color** (máximo global de la enfermedad en todos los años) para que sean
+  comparables; al pulsar un año se fija en el mapa grande y se resalta durante la
+  reproducción automática.
 - Sin enfermedad preseleccionada a propósito (pedido del usuario): al cargar,
   mapa/ranking/evolución muestran estado vacío con mensaje invitando a buscar.
+
+## Rareza de los datos ya detectada
+- **`tasa` = 0,0 con `casos` > 0.** En el dataset oficial, 270 registros
+  (de 4 679 con casos) y 402 de las 1 168 combinaciones enfermedad-año tienen la
+  tasa publicada como `0.0` pese a haber casos (p. ej. Botulismo 2018: 6 casos,
+  todas las tasas 0,0). Es un redondeo/hueco de la fuente, no un bug del build.
+  Efecto: el ranking por "Tasa" no tiene nada que escalar en esas enfermedades;
+  el frontend lo detecta (`maxVal <= 0`) y muestra un aviso sugiriendo "Casos".
+  No se recalcula la tasa a mano (haría falta población provincial por año y
+  sería alterar el dato oficial).
 
 ## Pendiente / posibles siguientes pasos
 - Revisar las bases completas del concurso en la sede electrónica (no se pudo

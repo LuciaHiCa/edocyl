@@ -212,7 +212,7 @@
   #mapSvg{ width:100%; height:auto; display:block; }
   .province-path{ stroke: var(--surface); stroke-width:1.6; cursor:pointer; transition: filter .12s ease; }
   .province-path:hover{ filter: brightness(1.06); }
-  .province-path.is-pinned{ stroke: var(--accent); stroke-width:2.6; }
+  .province-path.is-selected{ stroke: var(--accent); stroke-width:2.6; }
   .province-label{ font-family: var(--font-mono); font-size:10.5px; fill: var(--text-primary); pointer-events:none; paint-order: stroke; stroke: var(--surface); stroke-width:3px; }
 
   .legend{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
@@ -223,12 +223,13 @@
 
   .bars{ display:flex; flex-direction:column; gap:9px; }
   .bar-row{ display:grid; grid-template-columns: 82px 1fr 64px; align-items:center; gap:10px; cursor:pointer; padding:3px 4px; border-radius:6px; }
-  .bar-row:hover, .bar-row.is-pinned{ background: var(--accent-soft); }
-  .bar-row.is-pinned .bar-name{ color: var(--accent); font-weight:600; }
+  .bar-row:hover, .bar-row.is-selected{ background: var(--accent-soft); }
+  .bar-row.is-selected .bar-name{ color: var(--accent); font-weight:600; }
   .bar-name{ font-size:12.5px; color: var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar-track{ height:16px; border-radius:4px; background: var(--grid); overflow:hidden; }
-  .bar-fill{ height:100%; border-radius:4px; box-shadow: inset 0 0 0 1px var(--border); }
+  .bar-track{ position:relative; height:16px; border-radius:4px; background: var(--grid); overflow:hidden; }
+  .bar-fill{ display:block; height:100%; width:0; border-radius:4px; box-shadow: inset 0 0 0 1px var(--border); transition: width .18s ease; }
   .bar-value{ font-family: var(--font-mono); font-size:12px; text-align:right; font-variant-numeric: tabular-nums; }
+  .bars-note{ font-size:12px; color: var(--text-muted); margin:2px 4px 0; }
 
   /* ---------- Small multiples: map year by year ---------- */
   .year-maps{ display:grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap:12px; }
@@ -248,21 +249,25 @@
   .ym-total{ font-size:10.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
   /* ---------- Trend chart ---------- */
-  .trend-panel svg{ width:100%; height:auto; display:block; }
-  .trend-line{ fill:none; stroke: var(--text-muted); stroke-width:1.6; opacity:.5; transition: stroke .15s ease, opacity .15s ease, stroke-width .15s ease; }
-  .trend-line.is-active{ stroke: var(--accent); stroke-width:2.6; opacity:1; }
+  .trend-panel svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .trend-line{ fill:none; stroke-linejoin:round; stroke-linecap:round; transition: stroke .15s ease, opacity .15s ease, stroke-width .15s ease; }
+  .trend-endlabel{ font-family: var(--font-mono); font-size:10.5px; font-weight:600; paint-order: stroke; stroke: var(--surface); stroke-width:3.5px; }
   .trend-axis text{ font-family: var(--font-mono); font-size:10.5px; fill: var(--text-muted); }
   .trend-axis line, .trend-grid line{ stroke: var(--grid); }
-  .dotgroup .trend-dot{ fill: var(--text-muted); opacity: .5; }
-  .dotgroup.is-active .trend-dot{ fill: var(--accent); opacity: 1; }
+  .trend-dot{ transition: fill .15s ease, opacity .15s ease; }
 
-  .province-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+  .trend-legend{ display:flex; flex-wrap:wrap; gap:7px; margin-top:16px; }
   .chip{
-    font: inherit; font-size:12px; padding:4px 11px; border-radius:100px; border:1px solid var(--border-strong);
+    font: inherit; font-size:12px; padding:4px 11px 4px 8px; border-radius:100px; border:1px solid var(--border-strong);
     background: transparent; color: var(--text-secondary); cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px;
   }
-  .chip:hover{ border-color: var(--accent); color: var(--accent); }
-  .chip.is-pinned{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight:600; }
+  .chip-dot{ width:9px; height:9px; border-radius:100px; flex:none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); }
+  .chip:hover{ border-color: var(--text-muted); color: var(--text-primary); }
+  .chip.is-selected{ border-color: currentColor; color: var(--text-primary); font-weight:600; background: var(--accent-soft); }
+  .chip.is-selected .chip-dot{ box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 0 0 3px var(--accent-soft); }
+  .trend-tools{ display:flex; align-items:center; gap:12px; margin-top:10px; font-size:12px; color: var(--text-muted); }
+  .linkish{ font: inherit; font-size:12px; background:none; border:none; padding:0; color: var(--accent); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
 
   .tooltip{
     position: fixed; pointer-events:none; z-index: 40; background: var(--surface-raised);
@@ -356,10 +361,14 @@
     <section class="panel trend-panel">
       <div class="panel-head">
         <h2>Evolución 2008–2024</h2>
-        <p class="panel-sub" id="trendSub">Pasa el cursor por el mapa o el ranking, o pulsa una provincia para fijarla en el tiempo.</p>
+        <p class="panel-sub" id="trendSub">Cada provincia tiene su color. Pulsa una o varias provincias (aquí, en el mapa o en el ranking) para compararlas; el resto se atenúa.</p>
       </div>
       <svg id="lineSvg" viewBox="0 0 940 320" role="img" aria-label="Evolución temporal por provincia"></svg>
-      <div class="province-chips" id="provinceChips"></div>
+      <div class="trend-legend" id="provinceChips" role="group" aria-label="Provincias — pulsa para comparar"></div>
+      <div class="trend-tools" id="trendTools" hidden>
+        <span id="trendSelInfo"></span>
+        <button type="button" id="clearTrendSel" class="linkish">Quitar selección</button>
+      </div>
     </section>
 
     <footer class="site-footer">
@@ -390,11 +399,18 @@
     diseaseIdx: null,   // no disease preselected — the user searches or picks one
     year: 2024,
     metric: "tasa",  // 'tasa' | 'casos'
-    pinned: null,    // province index
+    selected: [],    // province indices being compared in the trend chart
     hovered: null,   // province index
     playing: false,
     playTimer: null
   };
+
+  function toggleSelected(idx){
+    var p = state.selected.indexOf(idx);
+    if(p === -1) state.selected.push(idx); else state.selected.splice(p, 1);
+    renderAll();
+  }
+  function clearSelected(){ state.selected = []; renderAll(); }
 
   function seriesFor(diseaseIdx){ return DATA.series[String(diseaseIdx)] || {}; }
   function yearsFor(diseaseIdx){
@@ -422,6 +438,19 @@
     return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
   function rampFor(){ return isDarkMode() ? DARK_RAMP : LIGHT_RAMP; }
+
+  // ---------- Per-province categorical colours (trend chart) ----------
+  // Index-aligned with `provinces`. Built from the data-viz reference palette's
+  // eight validated theme-aware hues + a ninth (cyan). Nine series on a
+  // free-comparison line chart is past the CVD-safe categorical limit, so the
+  // chart always carries secondary encoding: a colour+name legend, direct
+  // end-labels on the lines you pick, and every other line dropped to grey.
+  var PROV_COLORS_LIGHT = ["#2a78d6","#eb6834","#1baf7a","#4a3aa7","#eda100","#e34948","#00a0b0","#008300","#e87ba4"];
+  var PROV_COLORS_DARK  = ["#3987e5","#d95926","#199e70","#9085e9","#c98500","#e66767","#3bbccd","#3aaa3a","#d55181"];
+  function provColors(){ return isDarkMode() ? PROV_COLORS_DARK : PROV_COLORS_LIGHT; }
+  function mutedInk(){
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue("--text-muted").trim() || "#888";
+  }
   function makeColorScale(maxVal){
     var ramp = rampFor();
     var n = ramp.length;
@@ -608,9 +637,7 @@
       highlightTrend();
     })
     .on("click", function(evt, f){
-      var provIdx = provinces.indexOf(f.properties.Texto);
-      state.pinned = (state.pinned === provIdx) ? null : provIdx;
-      renderAll();
+      toggleSelected(provinces.indexOf(f.properties.Texto));
     });
 
   // ---------- Legend ----------
@@ -633,17 +660,24 @@
   var axisG = lineG.append("g").attr("class", "trend-axis");
   var linesG = lineG.append("g").attr("class", "trend-lines");
   var dotG = lineG.append("g").attr("class", "trend-dots");
+  var labelsG = lineG.append("g").attr("class", "trend-endlabels");
+  var trendCtx = null;  // { series, xScale, yScale } — set by renderTrend, read by highlightTrend
 
   var chipsEl = document.getElementById("provinceChips");
   provinces.forEach(function(name, idx){
     var chip = document.createElement("button");
-    chip.type = "button"; chip.className = "chip"; chip.textContent = name;
-    chip.addEventListener("click", function(){
-      state.pinned = (state.pinned === idx) ? null : idx;
-      renderAll();
-    });
+    chip.type = "button"; chip.className = "chip";
+    chip.setAttribute("aria-pressed", "false");
+    var dot = document.createElement("span");
+    dot.className = "chip-dot";
+    chip.appendChild(dot);
+    chip.appendChild(document.createTextNode(name));
+    chip.addEventListener("click", function(){ toggleSelected(idx); });
     chipsEl.appendChild(chip);
   });
+  var trendTools = document.getElementById("trendTools");
+  var trendSelInfo = document.getElementById("trendSelInfo");
+  document.getElementById("clearTrendSel").addEventListener("click", clearSelected);
 
   // ---------- Small multiples: one mini map per year ----------
   var yearMapsEl = document.getElementById("yearMaps");
@@ -682,16 +716,90 @@
   });
 
   function highlightTrend(){
-    var active = state.pinned !== null ? state.pinned : state.hovered;
-    linesG.selectAll("path").classed("is-active", function(d){ return d.idx === active; });
-    dotG.selectAll("g.dotgroup").classed("is-active", function(d){ return d.idx === active; });
+    var sel = state.selected;
+    var hov = state.hovered;
+    var anySel = sel.length > 0;
+    var cols = provColors();
+    var muted = mutedInk();
+
+    function lineState(idx){
+      var isSel = sel.indexOf(idx) !== -1;
+      var isHov = hov === idx;
+      var strong = isSel || isHov;
+      var faded = anySel && !isSel && !isHov;
+      return { strong: strong, faded: faded,
+        stroke: faded ? muted : cols[idx],
+        width: strong ? 2.8 : (faded ? 1.1 : 1.8),
+        opacity: faded ? 0.22 : (strong ? 1 : (anySel ? 0.9 : 0.82)) };
+    }
+
+    // lines
+    linesG.selectAll("path").each(function(d){
+      var s = lineState(d.idx);
+      d3.select(this)
+        .attr("stroke", s.stroke)
+        .attr("stroke-width", s.width)
+        .attr("opacity", s.opacity);
+      if(s.strong){ this.parentNode.appendChild(this); }  // raise to front
+    });
+
+    // end dots
+    dotG.selectAll("g.dotgroup").each(function(d){
+      var s = lineState(d.idx);
+      d3.select(this).selectAll("circle")
+        .attr("fill", s.stroke)
+        .attr("opacity", s.opacity)
+        .attr("r", s.strong ? 3.6 : 3);
+    });
+
+    // direct end-labels for the provinces being compared / hovered
+    var labelIdx = sel.slice();
+    if(hov !== null && labelIdx.indexOf(hov) === -1) labelIdx.push(hov);
+    var labelData = [];
+    if(trendCtx){
+      labelIdx.forEach(function(idx){
+        var srs = trendCtx.series[idx];
+        if(srs && srs.pts.length){
+          var last = srs.pts[srs.pts.length - 1];
+          labelData.push({ idx: idx, name: provinces[idx],
+            x: trendCtx.xScale(last.year), y: trendCtx.yScale(last.v) });
+        }
+      });
+    }
+    labelsG.selectAll("text").data(labelData, function(d){ return d.idx; }).join("text")
+      .attr("class", "trend-endlabel")
+      .attr("x", function(d){ return d.x + 7; })
+      .attr("y", function(d){ return d.y + 3; })
+      .attr("fill", function(d){ return cols[d.idx]; })
+      .text(function(d){ return d.name; });
+
+    // chips (legend + selector)
     Array.prototype.forEach.call(chipsEl.children, function(chip, i){
-      chip.classList.toggle("is-pinned", state.pinned === i);
+      var isSel = sel.indexOf(i) !== -1;
+      chip.classList.toggle("is-selected", isSel);
+      chip.setAttribute("aria-pressed", isSel ? "true" : "false");
+      chip.style.color = isSel ? cols[i] : "";
+      var dot = chip.querySelector(".chip-dot");
+      if(dot) dot.style.background = cols[i];
     });
+
+    // ranking rows
     Array.prototype.forEach.call(document.querySelectorAll(".bar-row"), function(row){
-      row.classList.toggle("is-pinned", state.pinned !== null && Number(row.dataset.idx) === state.pinned);
+      row.classList.toggle("is-selected", sel.indexOf(Number(row.dataset.idx)) !== -1);
     });
-    provPaths.classed("is-pinned", function(f){ return provinces.indexOf(f.properties.Texto) === state.pinned; });
+
+    // map outlines
+    provPaths.classed("is-selected", function(f){
+      return sel.indexOf(provinces.indexOf(f.properties.Texto)) !== -1;
+    });
+
+    // tools row
+    trendTools.hidden = !anySel;
+    if(anySel){
+      trendSelInfo.textContent = sel.length === 1
+        ? "1 provincia seleccionada"
+        : sel.length + " provincias seleccionadas";
+    }
   }
 
   // ---------- Master render ----------
@@ -743,24 +851,36 @@
       '<div class="legend-ticks"><span>0' + (state.metric==='tasa' ? '' : ' casos') + '</span><span>' + fmt(maxVal, state.metric==='tasa'?1:0) + (state.metric==='tasa' ? ' /100.000' : ' casos') + '</span></div>' +
       '<div class="legend-foot"><span class="legend-zero-swatch"></span><span>Sin casos declarados</span></div>';
 
-    // bars (ranking)
+    // bars (ranking) — sorted by the chosen metric, casos as tie-breaker
     var order = provinces.map(function(_, i){ return i; })
       .filter(function(i){ return values[i] !== null; })
-      .sort(function(a,b){ return values[b]-values[a]; });
+      .sort(function(a,b){
+        var d = values[b] - values[a];
+        if(d) return d;
+        return (rows[b] ? rows[b][0] : 0) - (rows[a] ? rows[a][0] : 0);
+      });
     barsEl.innerHTML = "";
     order.forEach(function(i){
       var row = document.createElement("div");
       row.className = "bar-row"; row.dataset.idx = i;
-      var pct = maxVal > 0 ? (values[i]/maxVal*100) : 0;
+      var pct = maxVal > 0 ? (values[i] / maxVal * 100) : 0;
       row.innerHTML =
         '<span class="bar-name">' + provinces[i] + '</span>' +
         '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%; background:' + colorForIdx(i) + ';"></span></span>' +
         '<span class="bar-value">' + fmt(values[i], state.metric==='tasa'?1:0) + '</span>';
       row.addEventListener("mouseenter", function(){ state.hovered = i; highlightTrend(); });
       row.addEventListener("mouseleave", function(){ state.hovered = null; highlightTrend(); });
-      row.addEventListener("click", function(){ state.pinned = (state.pinned===i) ? null : i; renderAll(); });
+      row.addEventListener("click", function(){ toggleSelected(i); });
       barsEl.appendChild(row);
     });
+    if(maxVal <= 0){
+      var note = document.createElement("p");
+      note.className = "bars-note";
+      note.textContent = state.metric === "tasa"
+        ? "La fuente publica una tasa de 0,0 en todas las provincias este año (incidencia por debajo de su redondeo). Cambia a «Casos» para comparar."
+        : "Sin casos declarados en ninguna provincia este año.";
+      barsEl.appendChild(note);
+    }
 
     renderKPIs(rows, diseaseName, values, maxVal);
     renderTrend(diseaseName);
@@ -779,8 +899,10 @@
       '<span class="kpi-empty-msg">Busca una enfermedad de declaración obligatoria (p. ej. «Sarampión» o «Tuberculosis») o elige una de las sugerencias, para ver sus casos y tasas por provincia.</span></div>';
     linesG.selectAll("*").remove();
     dotG.selectAll("*").remove();
+    labelsG.selectAll("*").remove();
     gridG.selectAll("*").remove();
     axisG.selectAll("*").remove();
+    trendCtx = null;
     renderYearMaps();
     highlightTrend();
   }
@@ -879,11 +1001,14 @@
   function renderTrend(diseaseName){
     var avail = yearsFor(state.diseaseIdx);
     document.getElementById("trendSub").textContent =
-      (avail.length ? ("Serie " + avail[0] + "–" + avail[avail.length-1] + " para " + diseaseName + ". ") : "") +
-      "Pasa el cursor por el mapa o el ranking, o pulsa una provincia para fijarla.";
+      (avail.length ? ("Serie " + avail[0] + "–" + avail[avail.length-1] + " para " + diseaseName + " (" +
+        (state.metric === "tasa" ? "tasa /100.000 hab." : "casos") + "). ") : "") +
+      "Cada provincia tiene su color; pulsa varias (aquí, en el mapa o en el ranking) para compararlas.";
 
     if(avail.length < 2){
-      linesG.selectAll("*").remove(); dotG.selectAll("*").remove(); gridG.selectAll("*").remove(); axisG.selectAll("*").remove();
+      linesG.selectAll("*").remove(); dotG.selectAll("*").remove(); labelsG.selectAll("*").remove();
+      gridG.selectAll("*").remove(); axisG.selectAll("*").remove();
+      trendCtx = null;
       return;
     }
     var xScale = d3.scaleLinear().domain([avail[0], avail[avail.length-1]]).range([0, lineInnerW]);
@@ -899,6 +1024,7 @@
     });
     var maxV = Math.max.apply(null, allVals.concat([1]));
     var yScale = d3.scaleLinear().domain([0, maxV * 1.08]).range([lineInnerH, 0]);
+    trendCtx = { series: series, xScale: xScale, yScale: yScale };
 
     // grid + axes
     var yTicks = yScale.ticks(4);
