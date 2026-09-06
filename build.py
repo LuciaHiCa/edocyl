@@ -10,7 +10,7 @@ from pathlib import Path
 
 BASE = Path(__file__).parent
 
-TITLE = "Enfermedades de Declaración Obligatoria (EDO) en Castilla y León"
+TITLE = "EDO en Castilla y León"
 DESCRIPTION = ("Mapa interactivo de casos y tasas de incidencia de las Enfermedades "
                "de Declaración Obligatoria en las nueve provincias de Castilla y León, "
                "2008–2024. Datos abiertos de la Junta de Castilla y León.")
