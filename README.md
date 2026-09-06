@@ -135,9 +135,9 @@ headless) en claro y oscuro.
   (`#yearBar`, años sin datos deshabilitados) + botón único de reproducción
   "Ver evolución temporal en mapa …" con barra de progreso. Se eliminó el
   `<input type=range>`.
-- Sección "Cuestiones importantes" (`.notes-panel`): 4 tarjetas con la lectura
-  del mapa, las rupturas de serie, los brotes y los límites de la fuente —
-  resumen del análisis de datos (ver más abajo).
+- Sección "Cuestiones importantes" (`.notes-panel`): 4 tarjetas —
+  terminología e interpretación del mapa, rupturas de serie, brotes y límites
+  de la fuente— resumen del análisis de datos (ver más abajo).
 - Sin enfermedad preseleccionada a propósito (pedido del usuario): al cargar,
   mapa/ranking/evolución muestran estado vacío con mensaje invitando a buscar.
 

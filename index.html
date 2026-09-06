@@ -312,6 +312,7 @@
   .note-card ul{ margin:0; padding-left:17px; display:flex; flex-direction:column; gap:8px; }
   .note-card li{ font-size:12.5px; color: var(--text-secondary); line-height:1.5; }
   .note-card li b{ color: var(--text-primary); font-weight:600; }
+  .note-card .note-foot{ margin:0; font-size:12px; color: var(--text-muted); line-height:1.45; }
 
   .site-footer{ border-top:1px solid var(--border); padding-top:18px; display:flex; flex-direction:column; gap:6px; }
   .site-footer p{ margin:0; font-size:12px; color: var(--text-muted); max-width: 92ch; }
@@ -422,11 +423,12 @@
       </div>
       <div class="notes-grid">
         <article class="note-card">
-          <h3>Cómo leer el mapa</h3>
+          <h3>Terminología e interpretación del mapa</h3>
           <ul>
-            <li><b>Gris = cero casos declarados</b>, no «sin datos». Las nueve provincias declaran todos los años; una provincia en gris notificó 0 casos de esa enfermedad ese año.</li>
-            <li>En enfermedades poco frecuentes puede haber un único territorio con color: solo allí hubo casos ese año (por ejemplo el sarampión, que suele aparecer en brotes localizados en una o dos provincias).</li>
+            <li><b>Tasa /100.000 habitantes:</b> indica cuántos casos nuevos de una enfermedad se han declarado durante un año por cada 100.000 habitantes.</li>
+            <li><b>Variación interanual:</b> cuánto ha aumentado o disminuido una cifra respecto al año anterior, normalmente expresado como porcentaje.</li>
           </ul>
+          <p class="note-foot">Nota: las provincias que se muestran en gris tienen cero casos declarados.</p>
         </article>
         <article class="note-card">
           <h3>Rupturas en la serie — cuidado al comparar años</h3>
@@ -440,8 +442,8 @@
         <article class="note-card">
           <h3>Brotes reseñables</h3>
           <ul>
-            <li><b>Parotiditis (paperas):</b> repuntes en 2012–2013 y 2019 (hasta ~1.100–2.700 casos frente a ~250 de base) por pérdida de protección de la vacuna en ciertas cohortes.</li>
-            <li><b>Varicela:</b> baja a menos de un tercio desde 2017, con la vacunación infantil universal (calendario de 2016).</li>
+            <li><b>Parotiditis (paperas):</b> repuntes en 2012–2013 y 2019 (hasta ~1.100–2.700 casos frente a ~250 de base), posiblemente por pérdida de protección de la vacuna en ciertas cohortes.</li>
+            <li><b>Varicela:</b> disminución de la tasa /100.000 hab. tras el inicio de la vacunación universal en Castilla y León a partir de 2016.</li>
             <li><b>Tos ferina:</b> unos 1.200 casos en 2024 (frente a decenas), dentro de la epidemia europea de tos ferina posterior a la COVID.</li>
             <li><b>Al alza</b> en los últimos años: tularemia, campilobacteriosis, sífilis e infección gonocócica.</li>
           </ul>
