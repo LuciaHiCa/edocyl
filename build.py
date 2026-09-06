@@ -10,8 +10,7 @@ from pathlib import Path
 
 BASE = Path(__file__).parent
 
-TITLE = ("Mapa de Enfermedades de Declaración Obligatoria (EDO) "
-         "en Castilla y León")
+TITLE = "EDO en Castilla y León"
 DESCRIPTION = ("Mapa interactivo de casos y tasas de incidencia de las Enfermedades "
                "de Declaración Obligatoria en las nueve provincias de Castilla y León, "
                "2008–2024. Datos abiertos de la Junta de Castilla y León.")
@@ -31,13 +30,13 @@ STANDALONE_HEAD = """<meta charset="utf-8">
   /* Reset equivalente al que Artifact inyecta, para que la pagina autonoma
      se vea exactamente igual que el artifact. */
   html{ color-scheme: light dark; }
-  body{ margin: 0; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
-        background: #f3f2ee; }
+  body{ margin: 0; font: 14px "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f4f5f7; }
   img{ max-width: 100%; }
   [hidden]{ display: none !important; }
   .viz-root{ min-height: 100vh; }
   @media (prefers-color-scheme: dark){
-    body{ background: #0d0d0d; }
+    body{ background: #0d0e10; }
   }
 </style>"""
 

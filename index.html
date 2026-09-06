@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Mapa interactivo de casos y tasas de incidencia de las Enfermedades de Declaración Obligatoria en las nueve provincias de Castilla y León, 2008–2024. Datos abiertos de la Junta de Castilla y León.">
 <meta name="author" content="X Concurso de Datos Abiertos de la Junta de Castilla y León">
-<meta property="og:title" content="Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León">
+<meta property="og:title" content="EDO en Castilla y León">
 <meta property="og:description" content="Mapa interactivo de casos y tasas de incidencia de las Enfermedades de Declaración Obligatoria en las nueve provincias de Castilla y León, 2008–2024. Datos abiertos de la Junta de Castilla y León.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -14,33 +14,38 @@
   /* Reset equivalente al que Artifact inyecta, para que la pagina autonoma
      se vea exactamente igual que el artifact. */
   html{ color-scheme: light dark; }
-  body{ margin: 0; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
-        background: #f3f2ee; }
+  body{ margin: 0; font: 14px "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f4f5f7; }
   img{ max-width: 100%; }
   [hidden]{ display: none !important; }
   .viz-root{ min-height: 100vh; }
   @media (prefers-color-scheme: dark){
-    body{ background: #0d0d0d; }
+    body{ background: #0d0e10; }
   }
 </style>
-<title>Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</title>
+<title>EDO en Castilla y León</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   .viz-root{
     color-scheme: light;
-    --page-bg: #f3f2ee;
-    --surface: #fdfdfb;
+    --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --page-bg: #f4f5f7;
+    --surface: #ffffff;
     --surface-raised: #ffffff;
-    --text-primary: #14181c;
-    --text-secondary: #52514e;
-    --text-muted: #898781;
-    --border: rgba(20,24,28,0.12);
-    --grid: #e3e1d8;
-    --accent: #eb6834;
+    --text-primary: #15171c;
+    --text-secondary: #565b66;
+    --text-muted: #878c98;
+    --border: rgba(21,23,28,0.10);
+    --border-strong: rgba(21,23,28,0.17);
+    --grid: #e8eaee;
+    --shadow: 0 1px 2px rgba(16,18,24,0.05), 0 1px 3px rgba(16,18,24,0.04);
+    --accent: #e15c1e;
+    --accent-soft: rgba(225,92,30,0.10);
     --accent-ink: #ffffff;
-    --seq-0: #dfe6ea;   /* zero-case swatch, desaturated */
+    --seq-0: #e5e8ec;   /* zero-case swatch, desaturated */
     --seq-100: #cde2fb; --seq-150: #b7d3f6; --seq-200: #9ec5f4; --seq-250: #86b6ef;
     --seq-300: #6da7ec; --seq-350: #5598e7; --seq-400: #3987e5; --seq-450: #2a78d6;
     --seq-500: #256abf; --seq-550: #1c5cab; --seq-600: #184f95; --seq-650: #104281; --seq-700: #0d366b;
@@ -49,68 +54,77 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .viz-root{
       color-scheme: dark;
-      --page-bg: #0d0d0d;
-      --surface: #1a1a19;
-      --surface-raised: #212120;
-      --text-primary: #ffffff;
-      --text-secondary: #c3c2b7;
-      --text-muted: #8f8d86;
-      --border: rgba(255,255,255,0.12);
-      --grid: #2c2c2a;
-      --accent: #d95926;
-      --accent-ink: #ffffff;
-      --seq-0: #232c31;
+      --page-bg: #0d0e10;
+      --surface: #17181b;
+      --surface-raised: #1e1f23;
+      --text-primary: #f4f5f7;
+      --text-secondary: #b9bcc4;
+      --text-muted: #82868f;
+      --border: rgba(255,255,255,0.11);
+      --border-strong: rgba(255,255,255,0.19);
+      --grid: #2a2c30;
+      --shadow: none;
+      --accent: #ec7a3e;
+      --accent-soft: rgba(236,122,62,0.15);
+      --accent-ink: #20140a;
+      --seq-0: #242a2f;
     }
   }
   :root[data-theme="dark"] .viz-root{
     color-scheme: dark;
-    --page-bg: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-raised: #212120;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #8f8d86;
-    --border: rgba(255,255,255,0.12);
-    --grid: #2c2c2a;
-    --accent: #d95926;
-    --accent-ink: #ffffff;
-    --seq-0: #232c31;
+    --page-bg: #0d0e10;
+    --surface: #17181b;
+    --surface-raised: #1e1f23;
+    --text-primary: #f4f5f7;
+    --text-secondary: #b9bcc4;
+    --text-muted: #82868f;
+    --border: rgba(255,255,255,0.11);
+    --border-strong: rgba(255,255,255,0.19);
+    --grid: #2a2c30;
+    --shadow: none;
+    --accent: #ec7a3e;
+    --accent-soft: rgba(236,122,62,0.15);
+    --accent-ink: #20140a;
+    --seq-0: #242a2f;
   }
 
   *{ box-sizing: border-box; }
   .viz-root{
     background: var(--page-bg);
     color: var(--text-primary);
-    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
     line-height: 1.45;
-    padding: 28px 20px 60px;
+    padding: 34px 20px 76px;
   }
-  .wrap{ max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
-  h1,h2{ font-family: "Source Serif 4", Georgia, serif; text-wrap: balance; margin: 0; }
+  .wrap{ max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  h1,h2{ font-family: var(--font-sans); text-wrap: balance; margin: 0; }
   a{ color: var(--accent); }
 
   /* ---------- Masthead ---------- */
-  .masthead{ display:flex; flex-direction:column; gap:10px; padding-bottom: 6px; }
-  .eyebrow{ margin:0; font-size:12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); font-weight:600; }
-  .masthead h1{ font-size: clamp(26px, 4vw, 38px); font-weight: 600; letter-spacing: -0.01em; }
-  .lede{ margin:0; max-width: 62ch; color: var(--text-secondary); font-size: 15px; }
-  .meta-row{ display:flex; flex-wrap:wrap; gap: 10px 16px; align-items:center; margin-top: 4px; }
-  .badge{ font-size:11.5px; font-weight:600; letter-spacing:.02em; color: var(--accent); border:1px solid var(--accent); border-radius:100px; padding: 4px 11px; }
-  .source-link{ font-size: 13px; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
-  .source-link:hover{ color: var(--accent); }
+  .masthead{ display:flex; flex-direction:column; gap:12px; }
+  .masthead h1{ font-size: clamp(24px, 3.4vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+  .lede{ margin:0; max-width: 64ch; color: var(--text-secondary); font-size: 15.5px; }
+
+  /* ---------- Shared section shell ---------- */
+  .panel, .controls, .kpi-tile{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .panel-head{ display:flex; flex-direction:column; gap:3px; margin-bottom:14px; }
+  .panel-head h2{ font-size:16px; font-weight:600; letter-spacing:-0.01em; }
+  .panel-sub{ margin:0; font-size:12.5px; color: var(--text-secondary); }
+  .panel{ padding: 20px 22px 22px; }
 
   /* ---------- Controls ---------- */
-  .controls{
-    display:flex; flex-direction:column; gap:18px;
-    background: var(--surface); border:1px solid var(--border); border-radius:14px;
-    padding: 20px 22px 18px;
-  }
+  .controls{ display:flex; flex-direction:column; gap:18px; padding: 20px 22px; }
   .control-group{ display:flex; flex-direction:column; gap:6px; min-width:0; }
   .control-label, label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: var(--text-muted); }
 
   /* -- search: the primary control on this page -- */
   .search-block{ display:flex; flex-direction:column; gap:9px; }
-  .search-label{ font-size:13px; font-weight:600; color: var(--text-primary); }
+  .search-label{ font-size:13.5px; font-weight:600; color: var(--text-primary); }
   .search-wrap{ position:relative; }
   .search-icon{
     position:absolute; left:16px; top:50%; transform:translateY(-50%);
@@ -118,25 +132,25 @@
     stroke-linecap:round; pointer-events:none;
   }
   #diseaseInput{
-    font: inherit; font-size:17px; padding:15px 46px; border-radius:12px; border:1.5px solid var(--border);
+    font: inherit; font-size:16.5px; padding:14px 44px; border-radius:11px; border:1.5px solid var(--border-strong);
     background: var(--surface-raised); color: var(--text-primary); width:100%;
   }
   #diseaseInput::placeholder{ color: var(--text-muted); font-size:15px; }
   #diseaseInput:focus-visible{
     outline: none; border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(235,104,52,0.16);
+    box-shadow: 0 0 0 4px var(--accent-soft);
   }
   .clear-btn{
     position:absolute; right:10px; top:50%; transform:translateY(-50%);
     width:28px; height:28px; border-radius:100px; border:none; background:transparent;
     color: var(--text-muted); cursor:pointer; font-size:15px; line-height:1;
   }
-  .clear-btn:hover{ color: var(--accent); background: rgba(235,104,52,0.1); }
+  .clear-btn:hover{ color: var(--accent); background: var(--accent-soft); }
   .quick-picks-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
   .quick-picks-label{ font-size:12px; color: var(--text-muted); }
   .quick-picks{ display:flex; flex-wrap:wrap; gap:6px; }
   .quick-pick{
-    font: inherit; font-size:12.5px; padding:4px 12px; border-radius:100px; border:1px solid var(--border);
+    font: inherit; font-size:12.5px; padding:4px 12px; border-radius:100px; border:1px solid var(--border-strong);
     background: transparent; color: var(--text-secondary); cursor:pointer;
   }
   .quick-pick:hover{ border-color: var(--accent); color: var(--accent); }
@@ -144,12 +158,12 @@
 
   /* -- secondary controls: metric + year -- */
   .secondary-controls{
-    display:grid; grid-template-columns: 1fr 1.6fr; gap: 18px;
+    display:grid; grid-template-columns: 1fr 1.6fr; gap: 20px;
     padding-top:16px; border-top:1px solid var(--border);
   }
   @media (max-width: 800px){ .secondary-controls{ grid-template-columns: 1fr; } }
 
-  .segmented{ display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; width:fit-content; }
+  .segmented{ display:flex; border:1px solid var(--border-strong); border-radius:9px; overflow:hidden; width:fit-content; }
   .seg-btn{
     font: inherit; font-size:13px; padding:8px 13px; border:none; background: var(--surface-raised);
     color: var(--text-secondary); cursor:pointer; border-right:1px solid var(--border);
@@ -159,39 +173,39 @@
 
   .year-control{ gap:4px; }
   .year-head{ display:flex; align-items:baseline; gap:10px; }
-  .year-value{ font-family:"IBM Plex Mono", monospace; font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .year-value{ font-family: var(--font-mono); font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
   .play-btn{
-    margin-left:auto; width:26px; height:26px; border-radius:100px; border:1px solid var(--border);
+    margin-left:auto; width:26px; height:26px; border-radius:100px; border:1px solid var(--border-strong);
     background: var(--surface-raised); color: var(--text-secondary); cursor:pointer; font-size:11px;
     display:flex; align-items:center; justify-content:center;
   }
   .play-btn:hover{ border-color: var(--accent); color: var(--accent); }
   .play-btn.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   #yearSlider{ width:100%; accent-color: var(--accent); }
-  .year-ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono", monospace; font-size:10px; color: var(--text-muted); }
+  .year-ticks{ display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:10px; color: var(--text-muted); }
 
   /* ---------- KPI row ---------- */
   .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
   @media (max-width: 800px){ .kpi-row{ grid-template-columns: repeat(2,1fr); } }
   .kpi-tile{
-    background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px;
-    display:flex; flex-direction:column; gap:4px;
+    padding:15px 16px; display:flex; flex-direction:column; gap:5px;
   }
   .kpi-label{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color: var(--text-muted); }
-  .kpi-value{ font-family:"IBM Plex Mono", monospace; font-size: clamp(20px,2.6vw,26px); font-weight:600; font-variant-numeric: tabular-nums; }
+  .kpi-value{ font-family: var(--font-mono); font-size: clamp(20px,2.6vw,25px); font-weight:600; font-variant-numeric: tabular-nums; }
   .kpi-sub{ font-size:12px; color: var(--text-secondary); }
   .kpi-value .unit{ font-size:0.55em; color: var(--text-muted); font-weight:500; margin-left:3px; }
   .kpi-delta-up{ color: #b5432a; }
   .kpi-delta-down{ color: #1c5cab; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .viz-root .kpi-delta-up{ color: #f0885f; }
+    :root:not([data-theme="light"]) .viz-root .kpi-delta-down{ color: #6ea8e6; }
+  }
+  :root[data-theme="dark"] .viz-root .kpi-delta-up{ color: #f0885f; }
+  :root[data-theme="dark"] .viz-root .kpi-delta-down{ color: #6ea8e6; }
   .kpi-tile-wide{ grid-column: 1 / -1; }
-  .kpi-empty-msg{ font-size:14px; color: var(--text-secondary); font-weight:400; font-family:"IBM Plex Sans", sans-serif; }
+  .kpi-empty-msg{ font-size:14px; color: var(--text-secondary); font-weight:400; font-family: var(--font-sans); }
 
-  /* ---------- Panels ---------- */
-  .panel{ background: var(--surface); border:1px solid var(--border); border-radius:16px; padding: 18px 20px 20px; }
-  .panel-head{ display:flex; flex-direction:column; gap:3px; margin-bottom:12px; }
-  .panel-head h2{ font-size:19px; font-weight:600; }
-  .panel-sub{ margin:0; font-size:12.5px; color: var(--text-secondary); }
-
+  /* ---------- Main grid: map + ranking ---------- */
   .main-grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap:18px; align-items:start; }
   @media (max-width: 900px){ .main-grid{ grid-template-columns: 1fr; } }
 
@@ -199,34 +213,52 @@
   .province-path{ stroke: var(--surface); stroke-width:1.6; cursor:pointer; transition: filter .12s ease; }
   .province-path:hover{ filter: brightness(1.06); }
   .province-path.is-pinned{ stroke: var(--accent); stroke-width:2.6; }
-  .province-label{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; fill: var(--text-primary); pointer-events:none; paint-order: stroke; stroke: var(--surface); stroke-width:3px; }
+  .province-label{ font-family: var(--font-mono); font-size:10.5px; fill: var(--text-primary); pointer-events:none; paint-order: stroke; stroke: var(--surface); stroke-width:3px; }
 
   .legend{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
   .legend-bar{ height:10px; border-radius:6px; border:1px solid var(--border); }
-  .legend-ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono", monospace; font-size:10.5px; color: var(--text-muted); }
+  .legend-ticks{ display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:10.5px; color: var(--text-muted); }
   .legend-foot{ display:flex; align-items:center; gap:8px; font-size:11.5px; color: var(--text-secondary); }
   .legend-zero-swatch{ width:12px; height:12px; border-radius:3px; background: var(--seq-0); border:1px solid var(--border); display:inline-block; }
 
   .bars{ display:flex; flex-direction:column; gap:9px; }
   .bar-row{ display:grid; grid-template-columns: 82px 1fr 64px; align-items:center; gap:10px; cursor:pointer; padding:3px 4px; border-radius:6px; }
-  .bar-row:hover, .bar-row.is-pinned{ background: rgba(235,104,52,0.08); }
+  .bar-row:hover, .bar-row.is-pinned{ background: var(--accent-soft); }
   .bar-row.is-pinned .bar-name{ color: var(--accent); font-weight:600; }
   .bar-name{ font-size:12.5px; color: var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bar-track{ height:16px; border-radius:4px; background: var(--grid); overflow:hidden; }
   .bar-fill{ height:100%; border-radius:4px; box-shadow: inset 0 0 0 1px var(--border); }
-  .bar-value{ font-family:"IBM Plex Mono", monospace; font-size:12px; text-align:right; font-variant-numeric: tabular-nums; }
+  .bar-value{ font-family: var(--font-mono); font-size:12px; text-align:right; font-variant-numeric: tabular-nums; }
 
+  /* ---------- Small multiples: map year by year ---------- */
+  .year-maps{ display:grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap:12px; }
+  .year-map{
+    font: inherit; text-align:left; display:flex; flex-direction:column; gap:5px;
+    background: var(--surface-raised); border:1px solid var(--border); border-radius:10px;
+    padding:9px 9px 11px; cursor:pointer;
+    transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+  }
+  .year-map:hover{ border-color: var(--accent); transform: translateY(-1px); }
+  .year-map:focus-visible{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .year-map.is-current{ border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .year-map.no-data{ opacity:.45; }
+  .year-map svg{ width:100%; height:auto; display:block; }
+  .province-mini{ stroke: var(--surface-raised); stroke-width:1; }
+  .ym-year{ font-family: var(--font-mono); font-size:12.5px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .ym-total{ font-size:10.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Trend chart ---------- */
   .trend-panel svg{ width:100%; height:auto; display:block; }
-  .trend-line{ fill:none; stroke: var(--text-muted); stroke-width:1.6; opacity:.55; transition: stroke .15s ease, opacity .15s ease, stroke-width .15s ease; }
+  .trend-line{ fill:none; stroke: var(--text-muted); stroke-width:1.6; opacity:.5; transition: stroke .15s ease, opacity .15s ease, stroke-width .15s ease; }
   .trend-line.is-active{ stroke: var(--accent); stroke-width:2.6; opacity:1; }
-  .trend-axis text{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; fill: var(--text-muted); }
+  .trend-axis text{ font-family: var(--font-mono); font-size:10.5px; fill: var(--text-muted); }
   .trend-axis line, .trend-grid line{ stroke: var(--grid); }
-  .dotgroup .trend-dot{ fill: var(--text-muted); opacity: .55; }
+  .dotgroup .trend-dot{ fill: var(--text-muted); opacity: .5; }
   .dotgroup.is-active .trend-dot{ fill: var(--accent); opacity: 1; }
 
   .province-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
   .chip{
-    font: inherit; font-size:12px; padding:4px 11px; border-radius:100px; border:1px solid var(--border);
+    font: inherit; font-size:12px; padding:4px 11px; border-radius:100px; border:1px solid var(--border-strong);
     background: transparent; color: var(--text-secondary); cursor:pointer;
   }
   .chip:hover{ border-color: var(--accent); color: var(--accent); }
@@ -234,16 +266,16 @@
 
   .tooltip{
     position: fixed; pointer-events:none; z-index: 40; background: var(--surface-raised);
-    border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:12.5px;
+    border:1px solid var(--border-strong); border-radius:10px; padding:9px 12px; font-size:12.5px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.16); max-width:220px; transform: translate(-50%, -110%);
   }
   .tooltip .tt-title{ font-weight:600; margin-bottom:3px; }
   .tooltip .tt-row{ display:flex; justify-content:space-between; gap:14px; color: var(--text-secondary); }
-  .tooltip .tt-row b{ font-family:"IBM Plex Mono", monospace; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .tooltip .tt-row b{ font-family: var(--font-mono); color: var(--text-primary); font-variant-numeric: tabular-nums; }
 
   .empty-note{ font-size:13px; color: var(--text-muted); padding: 30px 10px; text-align:center; }
 
-  .site-footer{ border-top:1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:6px; }
+  .site-footer{ border-top:1px solid var(--border); padding-top:18px; display:flex; flex-direction:column; gap:6px; }
   .site-footer p{ margin:0; font-size:12px; color: var(--text-muted); max-width: 92ch; }
   .site-footer a{ color: var(--text-secondary); }
 
@@ -255,13 +287,8 @@
   <div class="wrap">
 
     <header class="masthead">
-      <p class="eyebrow">Red de Vigilancia Epidemiológica · Castilla y León</p>
-      <h1>Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</h1>
-      <p class="lede">Casos y tasa de incidencia (por 100.000 habitantes y año) de las enfermedades de declaración obligatoria (EDO) en las nueve provincias de Castilla y León, 2008–2024.</p>
-      <div class="meta-row">
-        <span class="badge">X Concurso de Datos Abiertos JCyL — Productos y Servicios</span>
-        <a class="source-link" href="https://datosabiertos.jcyl.es/web/jcyl/set/es/salud/enfermedades-declaracion-obligatoria-casos/1284839794579" target="_blank" rel="noopener">Fuente: Portal de Datos Abiertos de la Junta de Castilla y León</a>
-      </div>
+      <h1>Enfermedades de Declaración Obligatoria en Castilla y León</h1>
+      <p class="lede">Casos y tasa de incidencia (por 100.000 habitantes y año) en las nueve provincias, 2008–2024. Elige una enfermedad para explorar el mapa, el ranking provincial y su evolución en el tiempo.</p>
     </header>
 
     <section class="controls" aria-label="Filtros">
@@ -316,6 +343,14 @@
         </div>
         <div class="bars" id="bars"></div>
       </div>
+    </section>
+
+    <section class="panel yearmaps-panel">
+      <div class="panel-head">
+        <h2>El mapa, año a año</h2>
+        <p class="panel-sub" id="yearMapsSub">Elige una enfermedad para ver cómo cambia el mapa entre 2008 y 2024.</p>
+      </div>
+      <div class="year-maps" id="yearMaps"></div>
     </section>
 
     <section class="panel trend-panel">
@@ -610,6 +645,42 @@
     chipsEl.appendChild(chip);
   });
 
+  // ---------- Small multiples: one mini map per year ----------
+  var yearMapsEl = document.getElementById("yearMaps");
+  var yearMapTiles = years.map(function(yr){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "year-map";
+    btn.setAttribute("data-year", yr);
+
+    var svg = d3.create("svg")
+      .attr("viewBox", "0 0 600 480")
+      .attr("aria-hidden", "true");
+    var paths = svg.selectAll("path")
+      .data(GEO.features).enter().append("path")
+      .attr("class", "province-mini")
+      .attr("d", pathGen);
+
+    var yearLbl = document.createElement("span");
+    yearLbl.className = "ym-year"; yearLbl.textContent = yr;
+    var totalLbl = document.createElement("span");
+    totalLbl.className = "ym-total";
+
+    btn.appendChild(svg.node());
+    btn.appendChild(yearLbl);
+    btn.appendChild(totalLbl);
+    btn.addEventListener("click", function(){
+      var i = currentAvailYears.indexOf(yr);
+      if(i === -1) return;
+      state.year = yr;
+      yearSlider.value = i;
+      yearValueEl.textContent = yr;
+      renderAll();
+    });
+    yearMapsEl.appendChild(btn);
+    return { year: yr, btn: btn, paths: paths, totalLbl: totalLbl };
+  });
+
   function highlightTrend(){
     var active = state.pinned !== null ? state.pinned : state.hovered;
     linesG.selectAll("path").classed("is-active", function(d){ return d.idx === active; });
@@ -642,6 +713,7 @@
       barsEl.innerHTML = '<p class="empty-note">Sin datos para este año.</p>';
       renderKPIs(null, diseaseName);
       renderTrend(diseaseName);
+      renderYearMaps();
       return;
     }
 
@@ -692,6 +764,7 @@
 
     renderKPIs(rows, diseaseName, values, maxVal);
     renderTrend(diseaseName);
+    renderYearMaps();
     highlightTrend();
   }
 
@@ -708,6 +781,7 @@
     dotG.selectAll("*").remove();
     gridG.selectAll("*").remove();
     axisG.selectAll("*").remove();
+    renderYearMaps();
     highlightTrend();
   }
 
@@ -751,6 +825,55 @@
         '<span class="kpi-value">' + (t.isHtml ? t.value : t.value) + (t.unit ? '<span class="unit">' + t.unit + '</span>' : '') + '</span>' +
         '<span class="kpi-sub">' + t.sub + '</span></div>';
     }).join("");
+  }
+
+  // ---------- Small multiples render ----------
+  function renderYearMaps(){
+    var sub = document.getElementById("yearMapsSub");
+    if(state.diseaseIdx === null){
+      sub.textContent = "Elige una enfermedad para ver cómo cambia el mapa entre 2008 y 2024.";
+      yearMapsEl.hidden = true;
+      return;
+    }
+    yearMapsEl.hidden = false;
+    var diseaseName = diseases[state.diseaseIdx];
+    var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
+    sub.textContent = diseaseName + " · " + metricLabel +
+      " · misma escala de color en todos los años para poder compararlos. Pulsa un año para fijarlo en el mapa de arriba.";
+
+    var gMax = 0;
+    years.forEach(function(yr){
+      var rows = rowsFor(state.diseaseIdx, yr);
+      if(!rows) return;
+      provinces.forEach(function(_, i){
+        var v = valueAt(rows, i);
+        if(v !== null && v > gMax) gMax = v;
+      });
+    });
+    var scale = makeColorScale(gMax || 1);
+    var zeroC = zeroSwatch();
+
+    yearMapTiles.forEach(function(t){
+      var rows = rowsFor(state.diseaseIdx, t.year);
+      t.btn.classList.toggle("is-current", t.year === state.year);
+      t.btn.classList.toggle("no-data", !rows);
+      if(!rows){
+        t.paths.attr("fill", zeroC);
+        t.totalLbl.textContent = "sin datos";
+        t.btn.setAttribute("aria-label", "Año " + t.year + ": sin datos");
+        return;
+      }
+      var total = rows.reduce(function(s,p){ return s + (p ? p[0] : 0); }, 0);
+      t.totalLbl.textContent = fmt(total) + " casos";
+      t.btn.setAttribute("aria-label",
+        "Año " + t.year + ": " + fmt(total) + " casos declarados en Castilla y León. Pulsa para fijar este año.");
+      t.paths.attr("fill", function(f){
+        var i = provinces.indexOf(f.properties.Texto);
+        var v = valueAt(rows, i);
+        if(v === null || v === 0) return zeroC;
+        return scale(v);
+      });
+    });
   }
 
   function renderTrend(diseaseName){
