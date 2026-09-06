@@ -301,6 +301,8 @@
   .note-body li{ font-size:12.5px; color: var(--text-secondary); line-height:1.5; max-width:82ch; }
   .note-body li b, .note-body p b{ color: var(--text-primary); font-weight:600; }
   .note-foot{ margin:0; font-size:12px; color: var(--text-muted); line-height:1.45; }
+  .note-link{ margin:2px 0 0; font-size:12.5px; font-weight:600; }
+  .note-link a{ text-decoration:underline; text-underline-offset:2px; }
 
   .note-sub{ border-top:1px solid var(--border); }
   .note-sub:first-of-type{ border-top:none; }
@@ -423,6 +425,15 @@
 
     <section class="panel notes-panel" aria-label="Notas y cuestiones importantes">
       <div class="notes-list">
+
+        <details class="note-acc">
+          <summary>Conozca las enfermedades</summary>
+          <div class="note-body">
+            <p>Selecciona una enfermedad para consultar información sobre qué es, cómo se transmite y cómo se vigila en España.</p>
+            <p>La información procede del Centro Nacional de Epidemiología (CNE) del Instituto de Salud Carlos III (ISCIII), organismo de referencia nacional en vigilancia epidemiológica.</p>
+            <p class="note-link"><a href="https://cne.isciii.es/es/servicios/enfermedades-transmisibles/enfermedades-a-z" target="_blank" rel="noopener">→ Consultar enfermedades de la A a la Z en el ISCIII</a></p>
+          </div>
+        </details>
 
         <details class="note-acc">
           <summary>Terminología e interpretación del mapa</summary>
