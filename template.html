@@ -275,6 +275,18 @@
 
   .empty-note{ font-size:13px; color: var(--text-muted); padding: 30px 10px; text-align:center; }
 
+  /* ---------- Cuestiones importantes ---------- */
+  .notes-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:18px; }
+  @media (max-width: 760px){ .notes-grid{ grid-template-columns: 1fr; } }
+  .note-card{ display:flex; flex-direction:column; gap:9px; }
+  .note-card h3{
+    margin:0; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    color: var(--accent);
+  }
+  .note-card ul{ margin:0; padding-left:17px; display:flex; flex-direction:column; gap:8px; }
+  .note-card li{ font-size:12.5px; color: var(--text-secondary); line-height:1.5; }
+  .note-card li b{ color: var(--text-primary); font-weight:600; }
+
   .site-footer{ border-top:1px solid var(--border); padding-top:18px; display:flex; flex-direction:column; gap:6px; }
   .site-footer p{ margin:0; font-size:12px; color: var(--text-muted); max-width: 92ch; }
   .site-footer a{ color: var(--text-secondary); }
@@ -321,7 +333,7 @@
           <div class="year-sub">
             <span class="year-sub-label">Reproducir</span>
             <button id="playBtn" type="button" class="play-toggle" aria-pressed="false">
-              <span class="play-ico" aria-hidden="true">▶</span><span id="playLabel">Ver evolución 2008–2024</span>
+              <span class="play-ico" aria-hidden="true">▶</span><span id="playLabel">Ver evolución temporal en mapa 2008–2024</span>
             </button>
             <div class="play-progress" id="playProgress" hidden><span></span></div>
           </div>
@@ -373,6 +385,49 @@
       <div class="trend-tools" id="trendTools" hidden>
         <span id="trendSelInfo"></span>
         <button type="button" id="clearTrendSel" class="linkish">Quitar selección</button>
+      </div>
+    </section>
+
+    <section class="panel notes-panel">
+      <div class="panel-head">
+        <h2>Cuestiones importantes</h2>
+        <p class="panel-sub">Cómo interpretar el mapa y qué límites tiene la fuente. Conviene leerlo antes de sacar conclusiones comparando unos años con otros.</p>
+      </div>
+      <div class="notes-grid">
+        <article class="note-card">
+          <h3>Cómo leer el mapa</h3>
+          <ul>
+            <li><b>Gris = cero casos declarados</b>, no «sin datos». Las nueve provincias declaran todos los años; una provincia en gris notificó 0 casos de esa enfermedad ese año.</li>
+            <li>En enfermedades raras puede haber un único territorio con color: solo allí hubo casos (por ejemplo, fiebres hemorrágicas víricas en 2018, un caso en Ávila).</li>
+          </ul>
+        </article>
+        <article class="note-card">
+          <h3>Rupturas en la serie — cuidado al comparar años</h3>
+          <ul>
+            <li><b>2009–2010, la gripe.</b> El pico de 2009 (unos 58.000 casos de gripe) es la pandemia de gripe A (H1N1); 2010 es el valle posterior (unos 14.000). Descontada la gripe, el total apenas se mueve entre 2008 y 2019 (~6.000–9.500 al año).</li>
+            <li><b>2020, la COVID-19.</b> Los ~170.000 casos son casi todos COVID-19 (136.000), que fue enfermedad de declaración obligatoria solo ese año; desde 2021 se vigila por otro sistema y no figura aquí.</li>
+            <li><b>2021, caída general.</b> Las medidas frente a la COVID (mascarilla, distancia, menos contacto) redujeron de verdad la transmisión de gripe, varicela, parotiditis y otras.</li>
+            <li><b>Desde 2023, sin gripe.</b> La gripe y la «gripe grave» salieron de la lista de EDO (pasan a vigilancia centinela). Eran la enfermedad más notificada (~25.000–35.000 al año), así que los totales de 2023–2024 (~5.000–6.000) no son comparables con los de años anteriores.</li>
+          </ul>
+        </article>
+        <article class="note-card">
+          <h3>Brotes reseñables</h3>
+          <ul>
+            <li><b>Parotiditis (paperas):</b> repuntes en 2012–2013 y 2019 (hasta ~1.100–2.700 casos frente a ~250 de base) por pérdida de protección de la vacuna en ciertas cohortes.</li>
+            <li><b>Varicela:</b> baja a menos de un tercio desde 2017, con la vacunación infantil universal (calendario de 2016).</li>
+            <li><b>Tos ferina:</b> unos 1.200 casos en 2024 (frente a decenas), dentro de la epidemia europea de tos ferina posterior a la COVID.</li>
+            <li><b>Al alza</b> en los últimos años: tularemia, campilobacteriosis, sífilis e infección gonocócica.</li>
+          </ul>
+        </article>
+        <article class="note-card">
+          <h3>Límites de la fuente</h3>
+          <ul>
+            <li><b>Tasa 0,0 con casos &gt; 0</b> en unos 270 registros: la fuente redondea la tasa a 0,0 aunque haya casos. El ranking por «Tasa» lo avisa; en esas enfermedades, compara con «Casos».</li>
+            <li><b>Enfermedades renombradas:</b> varias figuran dos veces con nombres distintos según el año («Fiebre del Dengue» → «Dengue», «Otras ETS» → «Otras ITS», los códigos de <i>E. coli</i> productora de toxina Shiga). Cada versión parece vacía media serie, pero es un cambio de nomenclatura.</li>
+            <li><b>Dato dudoso:</b> 78 casos humanos de «gripe aviar» en 2018 es inverosímil (España no ha tenido prácticamente casos humanos); casi con seguridad es un error de clasificación en el origen.</li>
+            <li>La lista de EDO cambia con la normativa: entre 67 y 70 enfermedades según el año.</li>
+          </ul>
+        </article>
       </div>
     </section>
 
@@ -571,7 +626,7 @@
 
   function playLabelText(){
     var ys = currentAvailYears;
-    return "Ver evolución " + ys[0] + "–" + ys[ys.length - 1];
+    return "Ver evolución temporal en mapa " + ys[0] + "–" + ys[ys.length - 1];
   }
   function updateYearUI(){
     yearValueEl.textContent = state.year;

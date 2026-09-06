@@ -125,18 +125,57 @@ headless) en claro y oscuro.
   color** (máximo global de la enfermedad en todos los años) para que sean
   comparables; al pulsar un año se fija en el mapa grande y se resalta durante la
   reproducción automática.
+- Control "Año" (rediseño sep-2026): barra con los 17 años como botones
+  (`#yearBar`, años sin datos deshabilitados) + botón único de reproducción
+  "Ver evolución temporal en mapa …" con barra de progreso. Se eliminó el
+  `<input type=range>`.
+- Sección "Cuestiones importantes" (`.notes-panel`): 4 tarjetas con la lectura
+  del mapa, las rupturas de serie, los brotes y los límites de la fuente —
+  resumen del análisis de datos (ver más abajo).
 - Sin enfermedad preseleccionada a propósito (pedido del usuario): al cargar,
   mapa/ranking/evolución muestran estado vacío con mensaje invitando a buscar.
 
-## Rareza de los datos ya detectada
-- **`tasa` = 0,0 con `casos` > 0.** En el dataset oficial, 270 registros
-  (de 4 679 con casos) y 402 de las 1 168 combinaciones enfermedad-año tienen la
-  tasa publicada como `0.0` pese a haber casos (p. ej. Botulismo 2018: 6 casos,
-  todas las tasas 0,0). Es un redondeo/hueco de la fuente, no un bug del build.
-  Efecto: el ranking por "Tasa" no tiene nada que escalar en esas enfermedades;
-  el frontend lo detecta (`maxVal <= 0`) y muestra un aviso sugiriendo "Casos".
-  No se recalcula la tasa a mano (haría falta población provincial por año y
-  sería alterar el dato oficial).
+## Análisis de los datos y rarezas detectadas
+Resumen del análisis hecho sobre `edo_raw.json` (lo relevante está también en la
+sección **"Cuestiones importantes"** de la propia página).
+
+**Totales por año (solo provincias, = lo que muestra el frontend):**
+2008 ≈ 56 000 · 2009 ≈ 64 900 · 2010 ≈ 20 400 · 2011–2019 ≈ 38 000–55 000 ·
+**2020 ≈ 170 300** · **2021 ≈ 5 300** · 2022 ≈ 29 100 · 2023 ≈ 5 000 · 2024 ≈ 6 000.
+Descontada la gripe, el total 2008–2019 es estable (~6 000–9 500/año): casi toda
+la variación interanual del total es gripe.
+
+- **Pico 2009 / valle 2010:** pandemia de gripe A (H1N1). Gripe 2009 ≈ 58 000,
+  2010 ≈ 14 000. El resto de EDO apenas se movió.
+- **2020:** COVID-19 = 136 211 casos (EDO solo ese año; desde 2021 se vigila
+  aparte y no aparece). Sin COVID, 2020 ≈ 34 000, normal.
+- **2021:** caída real por las medidas anti-COVID (gripe 2 174, varicela 255,
+  parotiditis 170…), probablemente acentuada por la sobrecarga de la red.
+- **Ruptura 2023:** "Gripe" y "Gripe Grave" **salen de la lista de EDO** (a
+  vigilancia centinela / SiVIRA). Eran la enfermedad más notificada, por eso
+  2023–2024 caen a ~5 000–6 000 y **no son comparables** con años previos.
+- **"2018 solo Ávila":** NO es un hueco. En crudo, las 9 provincias tienen fila
+  todos los años; en enfermedades raras solo una tuvo casos > 0 y las demás
+  salen en gris (= 0 declarado). Ej.: fiebres hemorrágicas víricas 2018 → 1 caso
+  en Ávila; sarampión 2018 → solo Valladolid.
+- **`tasa` = 0,0 con `casos` > 0:** ~270 registros; 402 de 1 168 combinaciones
+  enfermedad-año tienen las 9 tasas a 0,0 pese a haber casos (redondeo del
+  origen). El ranking por "Tasa" lo detecta (`maxVal <= 0`) y avisa. No se
+  recalcula a mano (haría falta población provincial por año = alterar el dato).
+- **Enfermedades renombradas** (aparecen 2 veces en la lista de 78, cada una con
+  media serie "vacía"): "Fiebre del Dengue" (2014–2022) → "Dengue" (2023–24);
+  "Otras ETS" → "Otras ITS"; 3 etiquetas para *E. coli* Shiga-toxigénica;
+  "SIDA" → "Nuevas infecciones por VIH/Sida"; "Herpes Zoster" (0 casos siempre).
+- **Dato inverosímil:** "Infección humana por virus de la gripe aviar" 2018 = 78
+  casos repartidos por CyL. España no ha tenido prácticamente casos humanos de
+  gripe aviar; casi seguro error de clasificación en el origen. (Además la tasa
+  de esos 78 es 0,0 salvo Ávila.)
+- **Filas `provincia == "CyL"`:** 133 registros, todos de 2023–2024, son el total
+  regional que la fuente añade esos dos años. El build los descarta (solo 9
+  provincias con nombre) — no hay pérdida de datos, pero ojo si se re-explota el
+  raw: sumar sin filtrar duplica 2023–2024.
+- **La lista de EDO cambia:** 69 enfermedades (2008–2018), 70 (2019–2020),
+  67–68 (2021–2024), por las actualizaciones de la normativa estatal.
 
 ## Pendiente / posibles siguientes pasos
 - Revisar las bases completas del concurso en la sede electrónica (no se pudo
