@@ -171,23 +171,38 @@
   .seg-btn:last-child{ border-right:none; }
   .seg-btn.active{ background: var(--accent); color: var(--accent-ink); font-weight:600; }
 
-  .year-control{ gap:12px; }
+  .year-control{ gap:14px; }
   .year-head{ display:flex; align-items:baseline; gap:10px; }
   .year-value{ font-family: var(--font-mono); font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-  .year-sub{ display:flex; flex-direction:column; gap:7px; }
-  .year-sub + .year-sub{ padding-top:12px; border-top:1px dashed var(--border); }
+  .year-sub{ display:flex; flex-direction:column; gap:8px; }
+  .year-sub + .year-sub{ padding-top:14px; border-top:1px solid var(--border); }
   .year-sub-label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: var(--text-muted); }
-  .year-note{ font-size:11.5px; color: var(--text-secondary); line-height:1.42; }
-  .year-play-row{ display:flex; align-items:center; gap:10px; }
-  .play-btn{
-    width:28px; height:28px; border-radius:100px; border:1px solid var(--border-strong);
-    background: var(--surface-raised); color: var(--text-secondary); cursor:pointer; font-size:11px;
-    display:flex; align-items:center; justify-content:center; flex:none;
+  .year-note{ font-size:12px; color: var(--text-secondary); line-height:1.42; }
+
+  .play-toggle{
+    font: inherit; font-size:13px; font-weight:600;
+    display:inline-flex; align-items:center; gap:9px; align-self:flex-start;
+    padding:9px 15px; border-radius:9px; cursor:pointer;
+    border:1px solid var(--border-strong); background: var(--surface-raised); color: var(--text-primary);
   }
-  .play-btn:hover{ border-color: var(--accent); color: var(--accent); }
-  .play-btn.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  #yearSlider{ width:100%; accent-color: var(--accent); margin:0; }
-  .year-ticks{ display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:10px; color: var(--text-muted); }
+  .play-toggle .play-ico{ font-size:10px; color: var(--accent); }
+  .play-toggle:hover:not(:disabled){ border-color: var(--accent); }
+  .play-toggle.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .play-toggle.playing .play-ico{ color: var(--accent-ink); }
+  .play-toggle:disabled{ opacity:.5; cursor:not-allowed; }
+  .play-progress{ height:4px; border-radius:100px; background: var(--grid); overflow:hidden; }
+  .play-progress > span{ display:block; height:100%; width:0; background: var(--accent); transition: width .25s linear; }
+
+  .year-bar{ display:flex; flex-wrap:wrap; gap:5px; }
+  .year-chip{
+    font: inherit; font-family: var(--font-mono); font-size:12px; font-variant-numeric: tabular-nums;
+    padding:5px 9px; border-radius:7px; cursor:pointer;
+    border:1px solid var(--border-strong); background: transparent; color: var(--text-secondary);
+    transition: border-color .1s ease, background .1s ease, color .1s ease;
+  }
+  .year-chip:hover:not(:disabled){ border-color: var(--accent); color: var(--accent); }
+  .year-chip.is-active{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight:600; }
+  .year-chip:disabled{ opacity:.32; cursor:not-allowed; }
 
   /* ---------- KPI row ---------- */
   .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
@@ -331,17 +346,16 @@
 
           <div class="year-sub">
             <span class="year-sub-label">Reproducir</span>
-            <div class="year-play-row">
-              <button id="playBtn" class="play-btn" aria-label="Reproducir la evolución año a año" title="Reproducir la evolución año a año">▶</button>
-              <span class="year-note">Pulsa ▶ y el mapa avanza solo, año a año, de 2008 a 2024. Vuelve a pulsarlo para detenerlo.</span>
-            </div>
+            <button id="playBtn" type="button" class="play-toggle" aria-pressed="false">
+              <span class="play-ico" aria-hidden="true">▶</span><span id="playLabel">Ver evolución 2008–2024</span>
+            </button>
+            <div class="play-progress" id="playProgress" hidden><span></span></div>
           </div>
 
           <div class="year-sub">
             <span class="year-sub-label">Selección de año</span>
-            <span class="year-note">Elige tú el año, sin modo vídeo: arrastra el control (o, con el foco puesto, usa las flechas ← →).</span>
-            <input type="range" id="yearSlider" min="0" max="16" step="1" aria-label="Seleccionar un año concreto" />
-            <div class="year-ticks" id="yearTicks"></div>
+            <span class="year-note">Elegir año para mostrar el mapa.</span>
+            <div class="year-bar" id="yearBar" role="group" aria-label="Elegir año"></div>
           </div>
         </div>
       </div>
@@ -556,45 +570,91 @@
     });
   });
 
-  // ---------- Year slider ----------
-  var yearSlider = document.getElementById("yearSlider");
+  // ---------- Year control: playback + clickable year bar ----------
   var yearValueEl = document.getElementById("yearValue");
-  var yearTicksEl = document.getElementById("yearTicks");
+  var yearBarEl = document.getElementById("yearBar");
   var playBtn = document.getElementById("playBtn");
+  var playLabel = document.getElementById("playLabel");
+  var playIco = playBtn.querySelector(".play-ico");
+  var playProgress = document.getElementById("playProgress");
+  var playProgressFill = playProgress.querySelector("span");
   var currentAvailYears = years;
 
+  var yearChips = years.map(function(yr){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "year-chip"; b.textContent = yr;
+    b.setAttribute("data-year", yr);
+    b.addEventListener("click", function(){
+      if(b.disabled) return;
+      stopPlay();
+      state.year = yr;
+      updateYearUI();
+      renderAll();
+    });
+    yearBarEl.appendChild(b);
+    return b;
+  });
+
+  function playLabelText(){
+    var ys = currentAvailYears;
+    return "Ver evolución " + ys[0] + "–" + ys[ys.length - 1];
+  }
+  function updateYearUI(){
+    yearValueEl.textContent = state.year;
+    yearChips.forEach(function(b){
+      var on = Number(b.getAttribute("data-year")) === state.year;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    var i = currentAvailYears.indexOf(state.year);
+    var frac = (currentAvailYears.length > 1 && i > -1) ? i / (currentAvailYears.length - 1) : 0;
+    playProgressFill.style.width = (frac * 100) + "%";
+  }
   function configureYearSlider(){
     currentAvailYears = state.diseaseIdx === null ? years.slice() : yearsFor(state.diseaseIdx);
-    yearSlider.min = 0;
-    yearSlider.max = currentAvailYears.length - 1;
-    yearSlider.value = currentAvailYears.indexOf(state.year);
-    yearValueEl.textContent = state.year;
-    yearTicksEl.innerHTML = "";
-    var first = document.createElement("span"); first.textContent = currentAvailYears[0];
-    var last = document.createElement("span"); last.textContent = currentAvailYears[currentAvailYears.length-1];
-    yearTicksEl.appendChild(first); yearTicksEl.appendChild(last);
-  }
-  yearSlider.addEventListener("input", function(){
-    state.year = currentAvailYears[Number(yearSlider.value)];
-    yearValueEl.textContent = state.year;
-    renderAll();
-  });
-  playBtn.addEventListener("click", function(){
-    state.playing = !state.playing;
-    playBtn.classList.toggle("playing", state.playing);
-    playBtn.textContent = state.playing ? "❚❚" : "▶";
-    if(state.playing){
-      state.playTimer = setInterval(function(){
-        var i = currentAvailYears.indexOf(state.year);
-        i = (i + 1) % currentAvailYears.length;
-        state.year = currentAvailYears[i];
-        yearSlider.value = i;
-        yearValueEl.textContent = state.year;
-        renderAll();
-      }, 900);
-    } else {
-      clearInterval(state.playTimer);
+    if(state.playing && (state.diseaseIdx === null || currentAvailYears.length < 2)) stopPlay();
+    yearChips.forEach(function(b){
+      var yr = Number(b.getAttribute("data-year"));
+      var missing = state.diseaseIdx !== null && currentAvailYears.indexOf(yr) === -1;
+      b.disabled = missing;
+      b.title = missing ? ("Sin datos de esta enfermedad en " + yr) : "";
+    });
+    if(currentAvailYears.indexOf(state.year) === -1){
+      state.year = currentAvailYears[currentAvailYears.length - 1];
     }
+    playBtn.disabled = state.diseaseIdx === null || currentAvailYears.length < 2;
+    playBtn.title = state.diseaseIdx === null ? "Elige una enfermedad para reproducir la evolución" : "";
+    if(!state.playing) playLabel.textContent = playLabelText();
+    updateYearUI();
+  }
+  function stopPlay(){
+    if(!state.playing) return;
+    state.playing = false;
+    clearInterval(state.playTimer);
+    playBtn.classList.remove("playing");
+    playBtn.setAttribute("aria-pressed", "false");
+    playIco.textContent = "▶";
+    playLabel.textContent = playLabelText();
+    playProgress.hidden = true;
+  }
+  function startPlay(){
+    if(state.diseaseIdx === null || currentAvailYears.length < 2) return;
+    state.playing = true;
+    playBtn.classList.add("playing");
+    playBtn.setAttribute("aria-pressed", "true");
+    playIco.textContent = "❚❚";
+    playLabel.textContent = "Pausar";
+    playProgress.hidden = false;
+    state.playTimer = setInterval(function(){
+      var i = currentAvailYears.indexOf(state.year);
+      i = (i + 1) % currentAvailYears.length;
+      state.year = currentAvailYears[i];
+      updateYearUI();
+      renderAll();
+    }, 900);
+  }
+  playBtn.addEventListener("click", function(){
+    if(state.playing) stopPlay(); else startPlay();
   });
 
   // ---------- Map (D3 geo) ----------
@@ -721,11 +781,10 @@
     btn.appendChild(yearLbl);
     btn.appendChild(totalLbl);
     btn.addEventListener("click", function(){
-      var i = currentAvailYears.indexOf(yr);
-      if(i === -1) return;
+      if(currentAvailYears.indexOf(yr) === -1) return;
+      stopPlay();
       state.year = yr;
-      yearSlider.value = i;
-      yearValueEl.textContent = yr;
+      updateYearUI();
       renderAll();
     });
     yearMapsEl.appendChild(btn);
