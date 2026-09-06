@@ -171,17 +171,22 @@
   .seg-btn:last-child{ border-right:none; }
   .seg-btn.active{ background: var(--accent); color: var(--accent-ink); font-weight:600; }
 
-  .year-control{ gap:4px; }
+  .year-control{ gap:12px; }
   .year-head{ display:flex; align-items:baseline; gap:10px; }
   .year-value{ font-family: var(--font-mono); font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .year-sub{ display:flex; flex-direction:column; gap:7px; }
+  .year-sub + .year-sub{ padding-top:12px; border-top:1px dashed var(--border); }
+  .year-sub-label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: var(--text-muted); }
+  .year-note{ font-size:11.5px; color: var(--text-secondary); line-height:1.42; }
+  .year-play-row{ display:flex; align-items:center; gap:10px; }
   .play-btn{
-    margin-left:auto; width:26px; height:26px; border-radius:100px; border:1px solid var(--border-strong);
+    width:28px; height:28px; border-radius:100px; border:1px solid var(--border-strong);
     background: var(--surface-raised); color: var(--text-secondary); cursor:pointer; font-size:11px;
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:center; flex:none;
   }
   .play-btn:hover{ border-color: var(--accent); color: var(--accent); }
   .play-btn.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  #yearSlider{ width:100%; accent-color: var(--accent); }
+  #yearSlider{ width:100%; accent-color: var(--accent); margin:0; }
   .year-ticks{ display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:10px; color: var(--text-muted); }
 
   /* ---------- KPI row ---------- */
@@ -322,10 +327,22 @@
           <div class="year-head">
             <span class="control-label">Año</span>
             <span id="yearValue" class="year-value">2024</span>
-            <button id="playBtn" class="play-btn" aria-label="Reproducir evolución anual" title="Reproducir evolución anual">▶</button>
           </div>
-          <input type="range" id="yearSlider" min="0" max="16" step="1" />
-          <div class="year-ticks" id="yearTicks"></div>
+
+          <div class="year-sub">
+            <span class="year-sub-label">Reproducir</span>
+            <div class="year-play-row">
+              <button id="playBtn" class="play-btn" aria-label="Reproducir la evolución año a año" title="Reproducir la evolución año a año">▶</button>
+              <span class="year-note">Pulsa ▶ y el mapa avanza solo, año a año, de 2008 a 2024. Vuelve a pulsarlo para detenerlo.</span>
+            </div>
+          </div>
+
+          <div class="year-sub">
+            <span class="year-sub-label">Selección de año</span>
+            <span class="year-note">Elige tú el año, sin modo vídeo: arrastra el control (o, con el foco puesto, usa las flechas ← →).</span>
+            <input type="range" id="yearSlider" min="0" max="16" step="1" aria-label="Seleccionar un año concreto" />
+            <div class="year-ticks" id="yearTicks"></div>
+          </div>
         </div>
       </div>
     </section>
