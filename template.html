@@ -272,6 +272,7 @@
   .tooltip .tt-title{ font-weight:600; margin-bottom:3px; }
   .tooltip .tt-row{ display:flex; justify-content:space-between; gap:14px; color: var(--text-secondary); }
   .tooltip .tt-row b{ font-family: var(--font-mono); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .tooltip .tt-note{ margin-top:5px; font-size:11px; color: var(--text-muted); line-height:1.35; }
 
   .empty-note{ font-size:13px; color: var(--text-muted); padding: 30px 10px; text-align:center; }
 
@@ -398,7 +399,7 @@
           <h3>Cómo leer el mapa</h3>
           <ul>
             <li><b>Gris = cero casos declarados</b>, no «sin datos». Las nueve provincias declaran todos los años; una provincia en gris notificó 0 casos de esa enfermedad ese año.</li>
-            <li>En enfermedades raras puede haber un único territorio con color: solo allí hubo casos (por ejemplo, fiebres hemorrágicas víricas en 2018, un caso en Ávila).</li>
+            <li>En enfermedades poco frecuentes puede haber un único territorio con color: solo allí hubo casos ese año (por ejemplo el sarampión, que suele aparecer en brotes localizados en una o dos provincias).</li>
           </ul>
         </article>
         <article class="note-card">
@@ -422,7 +423,7 @@
         <article class="note-card">
           <h3>Límites de la fuente</h3>
           <ul>
-            <li><b>Tasa 0,0 con casos &gt; 0</b> en unos 270 registros: la fuente redondea la tasa a 0,0 aunque haya casos. El ranking por «Tasa» lo avisa; en esas enfermedades, compara con «Casos».</li>
+            <li><b>La tasa de 2018 está rota en la fuente:</b> solo Ávila trae tasas reales; para las otras 8 provincias se publica 0 aunque haya miles de casos (Gripe 2018: Valladolid, 7.523 casos, tasa 0). Aquí se recalcula toda la columna de 2018 como casos ÷ población de 2017 × 100.000 y se marca con «≈» y el aviso «tasa estimada». Valida bien: la Gripe de Ávila estimada da 1.183,7 frente a 1.184,0 de la fuente.</li>
             <li><b>Enfermedades renombradas:</b> varias figuran dos veces con nombres distintos según el año («Fiebre del Dengue» → «Dengue», «Otras ETS» → «Otras ITS», los códigos de <i>E. coli</i> productora de toxina Shiga). Cada versión parece vacía media serie, pero es un cambio de nomenclatura.</li>
             <li><b>Dato dudoso:</b> 78 casos humanos de «gripe aviar» en 2018 es inverosímil (España no ha tenido prácticamente casos humanos); casi con seguridad es un error de clasificación en el origen.</li>
             <li>La lista de EDO cambia con la normativa: entre 67 y 70 enfermedades según el año.</li>
@@ -487,6 +488,10 @@
     if(!pair) return null;
     return state.metric === "tasa" ? pair[1] : pair[0];
   }
+  // A pair with a 3rd element is an estimated 2018 rate (the source publishes it
+  // as 0 for 8 of the 9 provinces; recomputed from cases and 2017 population).
+  function isEstPair(pair){ return !!(pair && pair.length > 2); }
+  var EST_2018_NOTE = "La tasa de 2018 es una estimación: la fuente oficial la publica como 0 en 8 de las 9 provincias.";
 
   // ---------- Sequential color ramp ----------
   var LIGHT_RAMP = ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"];
@@ -719,9 +724,11 @@
     } else {
       var rows = rowsFor(state.diseaseIdx, state.year);
       var pair = rows ? rows[provIdx] : null;
+      var est = isEstPair(pair);
       html = '<div class="tt-title">' + provinces[provIdx] + '</div>' +
         '<div class="tt-row"><span>Casos</span><b>' + (pair ? fmt(pair[0]) : "—") + '</b></div>' +
-        '<div class="tt-row"><span>Tasa /100.000</span><b>' + (pair ? fmt(pair[1],2) : "—") + '</b></div>';
+        '<div class="tt-row"><span>Tasa /100.000</span><b>' + (pair ? (est ? "≈ " : "") + fmt(pair[1],2) : "—") + '</b></div>' +
+        (est ? '<div class="tt-note">Tasa estimada (la fuente publica 0 para 2018).</div>' : '');
     }
     tooltip.innerHTML = html;
     tooltip.hidden = false;
@@ -917,8 +924,11 @@
     var diseaseName = diseases[state.diseaseIdx];
     var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
 
-    document.getElementById("mapSub").textContent = diseaseName + " · " + state.year + " · " + metricLabel;
-    document.getElementById("rankSub").textContent = "Provincias ordenadas por " + metricLabel + ", " + state.year + ".";
+    var est2018 = state.metric === "tasa" && state.year === 2018;
+    document.getElementById("mapSub").textContent =
+      diseaseName + " · " + state.year + " · " + metricLabel + (est2018 ? " · tasa estimada" : "");
+    document.getElementById("rankSub").textContent =
+      "Provincias ordenadas por " + metricLabel + ", " + state.year + "." + (est2018 ? " " + EST_2018_NOTE : "");
 
     if(!rows){
       mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
@@ -1066,7 +1076,8 @@
     var diseaseName = diseases[state.diseaseIdx];
     var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
     sub.textContent = diseaseName + " · " + metricLabel +
-      " · misma escala de color en todos los años para poder compararlos. Pulsa un año para fijarlo en el mapa de arriba.";
+      " · misma escala de color en todos los años para poder compararlos. Pulsa un año para fijarlo en el mapa de arriba." +
+      (state.metric === "tasa" ? " La tasa de 2018 es estimada." : "");
 
     var gMax = 0;
     years.forEach(function(yr){
@@ -1108,7 +1119,8 @@
     document.getElementById("trendSub").textContent =
       (avail.length ? ("Serie " + avail[0] + "–" + avail[avail.length-1] + " para " + diseaseName + " (" +
         (state.metric === "tasa" ? "tasa /100.000 hab." : "casos") + "). ") : "") +
-      "Cada provincia tiene su color; pulsa varias (aquí, en el mapa o en el ranking) para compararlas.";
+      "Cada provincia tiene su color; pulsa varias (aquí, en el mapa o en el ranking) para compararlas." +
+      (state.metric === "tasa" && avail.indexOf(2018) !== -1 ? " El punto de 2018 es una estimación." : "");
 
     if(avail.length < 2){
       linesG.selectAll("*").remove(); dotG.selectAll("*").remove(); labelsG.selectAll("*").remove();

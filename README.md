@@ -35,6 +35,9 @@ interanual).
   Edita este archivo, nunca `index.html` ni `edo-map.html` directamente.
 - `build.py` — genera las dos salidas a partir de `template.html`. Ejecuta
   `python3 build.py` tras cada cambio en la plantilla o en los datos.
+- `scripts/fix_2018_rates.py` — parche de datos: recalcula la tasa de 2018 en
+  `data/edo_compact.json` (ver "Análisis de los datos" abajo). Ya aplicado.
+  Idempotente; solo hay que volver a pasarlo si se regenera el compact.
 - `index.html` — **lo que sirve GitHub Pages**. Página autónoma: el mismo
   contenido más `<!doctype>/<html>/<head>/<body>` y un reset CSS equivalente al
   que el runtime de Artifact inyectaba (`margin:0`, `color-scheme`, imágenes
@@ -50,6 +53,8 @@ interanual).
   normalizando una única variante ortográfica duplicada ("gripe aviar" con/sin
   tilde → una sola entrada). Verificado: **cero combinaciones
   enfermedad-año incompletas** (si hay datos, están las 9 provincias).
+  Los pares de **2018 con casos > 0** llevan un tercer elemento `[casos,tasa,1]`:
+  su tasa es estimada (`scripts/fix_2018_rates.py`, ver abajo).
 - `data/cyl_provincias.geojson` — límites de las 9 provincias de Castilla y León,
   simplificados con mapshaper (8%) a partir de una fuente pública de provincias
   de España (SRID 4326), **ya corregidos** para el sentido de rotación de
@@ -58,6 +63,7 @@ interanual).
 
 ## Cómo reconstruir y publicar
 ```bash
+# python3 scripts/fix_2018_rates.py   # solo si se ha regenerado edo_compact.json
 python3 build.py          # regenera index.html y edo-map.html
 git add -A && git commit -m "..." && git push
 ```
@@ -158,10 +164,23 @@ la variación interanual del total es gripe.
   todos los años; en enfermedades raras solo una tuvo casos > 0 y las demás
   salen en gris (= 0 declarado). Ej.: fiebres hemorrágicas víricas 2018 → 1 caso
   en Ávila; sarampión 2018 → solo Valladolid.
-- **`tasa` = 0,0 con `casos` > 0:** ~270 registros; 402 de 1 168 combinaciones
-  enfermedad-año tienen las 9 tasas a 0,0 pese a haber casos (redondeo del
-  origen). El ranking por "Tasa" lo detecta (`maxVal <= 0`) y avisa. No se
-  recalcula a mano (haría falta población provincial por año = alterar el dato).
+- **La tasa de 2018 está rota en la fuente y se recalcula.** Los ~270 registros
+  con `casos` > 0 y `tasa` == 0 están **todos en 2018**: ese año solo Ávila trae
+  tasas reales; para las otras 8 provincias la fuente publica `0.0` aunque haya
+  miles de casos (Gripe 2018: Valladolid 7 523 casos, tasa 0). Y varias tasas que
+  sí trae Ávila en 2018 también son incoherentes (Yersiniosis, 2 casos → 51,7).
+  `scripts/fix_2018_rates.py` sustituye **toda** la columna de tasa de 2018 por
+  `casos ÷ población_2017 × 100 000` (población de 2017 recuperada del propio
+  dataset como mediana de `casos/tasa` sobre las filas limpias de 2017,
+  dispersión < 1 %). Validación: Gripe de Ávila 2018 estimada = 1 183,7 vs
+  1 184,0 de la fuente (< 0,1 %). Las celdas recalculadas se marcan con un tercer
+  elemento `1` en el par (`[casos, tasa, 1]`); el frontend muestra "≈" y el aviso
+  "tasa estimada" en mapa, tooltip, ranking, small-multiples y evolución.
+  Efecto anterior del bug: como el indicador por defecto es la tasa, en 2018
+  solo se coloreaba Ávila en cualquier enfermedad.
+- El resto de años: si en una enfermedad-año concreta las 9 tasas son 0 (enferm.
+  muy rara), el ranking por "Tasa" lo detecta (`maxVal <= 0`) y muestra un aviso
+  sugiriendo "Casos".
 - **Enfermedades renombradas** (aparecen 2 veces en la lista de 78, cada una con
   media serie "vacía"): "Fiebre del Dengue" (2014–2022) → "Dengue" (2023–24);
   "Otras ETS" → "Otras ITS"; 3 etiquetas para *E. coli* Shiga-toxigénica;
