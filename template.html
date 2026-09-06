@@ -1,0 +1,797 @@
+<title>Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  .viz-root{
+    color-scheme: light;
+    --page-bg: #f3f2ee;
+    --surface: #fdfdfb;
+    --surface-raised: #ffffff;
+    --text-primary: #14181c;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --border: rgba(20,24,28,0.12);
+    --grid: #e3e1d8;
+    --accent: #eb6834;
+    --accent-ink: #ffffff;
+    --seq-0: #dfe6ea;   /* zero-case swatch, desaturated */
+    --seq-100: #cde2fb; --seq-150: #b7d3f6; --seq-200: #9ec5f4; --seq-250: #86b6ef;
+    --seq-300: #6da7ec; --seq-350: #5598e7; --seq-400: #3987e5; --seq-450: #2a78d6;
+    --seq-500: #256abf; --seq-550: #1c5cab; --seq-600: #184f95; --seq-650: #104281; --seq-700: #0d366b;
+    --focus-ring: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .viz-root{
+      color-scheme: dark;
+      --page-bg: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-raised: #212120;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8f8d86;
+      --border: rgba(255,255,255,0.12);
+      --grid: #2c2c2a;
+      --accent: #d95926;
+      --accent-ink: #ffffff;
+      --seq-0: #232c31;
+    }
+  }
+  :root[data-theme="dark"] .viz-root{
+    color-scheme: dark;
+    --page-bg: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #212120;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8d86;
+    --border: rgba(255,255,255,0.12);
+    --grid: #2c2c2a;
+    --accent: #d95926;
+    --accent-ink: #ffffff;
+    --seq-0: #232c31;
+  }
+
+  *{ box-sizing: border-box; }
+  .viz-root{
+    background: var(--page-bg);
+    color: var(--text-primary);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.45;
+    padding: 28px 20px 60px;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+  h1,h2{ font-family: "Source Serif 4", Georgia, serif; text-wrap: balance; margin: 0; }
+  a{ color: var(--accent); }
+
+  /* ---------- Masthead ---------- */
+  .masthead{ display:flex; flex-direction:column; gap:10px; padding-bottom: 6px; }
+  .eyebrow{ margin:0; font-size:12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); font-weight:600; }
+  .masthead h1{ font-size: clamp(26px, 4vw, 38px); font-weight: 600; letter-spacing: -0.01em; }
+  .lede{ margin:0; max-width: 62ch; color: var(--text-secondary); font-size: 15px; }
+  .meta-row{ display:flex; flex-wrap:wrap; gap: 10px 16px; align-items:center; margin-top: 4px; }
+  .badge{ font-size:11.5px; font-weight:600; letter-spacing:.02em; color: var(--accent); border:1px solid var(--accent); border-radius:100px; padding: 4px 11px; }
+  .source-link{ font-size: 13px; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+  .source-link:hover{ color: var(--accent); }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex; flex-direction:column; gap:18px;
+    background: var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding: 20px 22px 18px;
+  }
+  .control-group{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .control-label, label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: var(--text-muted); }
+
+  /* -- search: the primary control on this page -- */
+  .search-block{ display:flex; flex-direction:column; gap:9px; }
+  .search-label{ font-size:13px; font-weight:600; color: var(--text-primary); }
+  .search-wrap{ position:relative; }
+  .search-icon{
+    position:absolute; left:16px; top:50%; transform:translateY(-50%);
+    width:21px; height:21px; fill:none; stroke: var(--text-muted); stroke-width:1.8;
+    stroke-linecap:round; pointer-events:none;
+  }
+  #diseaseInput{
+    font: inherit; font-size:17px; padding:15px 46px; border-radius:12px; border:1.5px solid var(--border);
+    background: var(--surface-raised); color: var(--text-primary); width:100%;
+  }
+  #diseaseInput::placeholder{ color: var(--text-muted); font-size:15px; }
+  #diseaseInput:focus-visible{
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(235,104,52,0.16);
+  }
+  .clear-btn{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    width:28px; height:28px; border-radius:100px; border:none; background:transparent;
+    color: var(--text-muted); cursor:pointer; font-size:15px; line-height:1;
+  }
+  .clear-btn:hover{ color: var(--accent); background: rgba(235,104,52,0.1); }
+  .quick-picks-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .quick-picks-label{ font-size:12px; color: var(--text-muted); }
+  .quick-picks{ display:flex; flex-wrap:wrap; gap:6px; }
+  .quick-pick{
+    font: inherit; font-size:12.5px; padding:4px 12px; border-radius:100px; border:1px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor:pointer;
+  }
+  .quick-pick:hover{ border-color: var(--accent); color: var(--accent); }
+  .quick-pick.active{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  /* -- secondary controls: metric + year -- */
+  .secondary-controls{
+    display:grid; grid-template-columns: 1fr 1.6fr; gap: 18px;
+    padding-top:16px; border-top:1px solid var(--border);
+  }
+  @media (max-width: 800px){ .secondary-controls{ grid-template-columns: 1fr; } }
+
+  .segmented{ display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; width:fit-content; }
+  .seg-btn{
+    font: inherit; font-size:13px; padding:8px 13px; border:none; background: var(--surface-raised);
+    color: var(--text-secondary); cursor:pointer; border-right:1px solid var(--border);
+  }
+  .seg-btn:last-child{ border-right:none; }
+  .seg-btn.active{ background: var(--accent); color: var(--accent-ink); font-weight:600; }
+
+  .year-control{ gap:4px; }
+  .year-head{ display:flex; align-items:baseline; gap:10px; }
+  .year-value{ font-family:"IBM Plex Mono", monospace; font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .play-btn{
+    margin-left:auto; width:26px; height:26px; border-radius:100px; border:1px solid var(--border);
+    background: var(--surface-raised); color: var(--text-secondary); cursor:pointer; font-size:11px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .play-btn:hover{ border-color: var(--accent); color: var(--accent); }
+  .play-btn.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  #yearSlider{ width:100%; accent-color: var(--accent); }
+  .year-ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono", monospace; font-size:10px; color: var(--text-muted); }
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
+  @media (max-width: 800px){ .kpi-row{ grid-template-columns: repeat(2,1fr); } }
+  .kpi-tile{
+    background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .kpi-label{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color: var(--text-muted); }
+  .kpi-value{ font-family:"IBM Plex Mono", monospace; font-size: clamp(20px,2.6vw,26px); font-weight:600; font-variant-numeric: tabular-nums; }
+  .kpi-sub{ font-size:12px; color: var(--text-secondary); }
+  .kpi-value .unit{ font-size:0.55em; color: var(--text-muted); font-weight:500; margin-left:3px; }
+  .kpi-delta-up{ color: #b5432a; }
+  .kpi-delta-down{ color: #1c5cab; }
+  .kpi-tile-wide{ grid-column: 1 / -1; }
+  .kpi-empty-msg{ font-size:14px; color: var(--text-secondary); font-weight:400; font-family:"IBM Plex Sans", sans-serif; }
+
+  /* ---------- Panels ---------- */
+  .panel{ background: var(--surface); border:1px solid var(--border); border-radius:16px; padding: 18px 20px 20px; }
+  .panel-head{ display:flex; flex-direction:column; gap:3px; margin-bottom:12px; }
+  .panel-head h2{ font-size:19px; font-weight:600; }
+  .panel-sub{ margin:0; font-size:12.5px; color: var(--text-secondary); }
+
+  .main-grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap:18px; align-items:start; }
+  @media (max-width: 900px){ .main-grid{ grid-template-columns: 1fr; } }
+
+  #mapSvg{ width:100%; height:auto; display:block; }
+  .province-path{ stroke: var(--surface); stroke-width:1.6; cursor:pointer; transition: filter .12s ease; }
+  .province-path:hover{ filter: brightness(1.06); }
+  .province-path.is-pinned{ stroke: var(--accent); stroke-width:2.6; }
+  .province-label{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; fill: var(--text-primary); pointer-events:none; paint-order: stroke; stroke: var(--surface); stroke-width:3px; }
+
+  .legend{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+  .legend-bar{ height:10px; border-radius:6px; border:1px solid var(--border); }
+  .legend-ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono", monospace; font-size:10.5px; color: var(--text-muted); }
+  .legend-foot{ display:flex; align-items:center; gap:8px; font-size:11.5px; color: var(--text-secondary); }
+  .legend-zero-swatch{ width:12px; height:12px; border-radius:3px; background: var(--seq-0); border:1px solid var(--border); display:inline-block; }
+
+  .bars{ display:flex; flex-direction:column; gap:9px; }
+  .bar-row{ display:grid; grid-template-columns: 82px 1fr 64px; align-items:center; gap:10px; cursor:pointer; padding:3px 4px; border-radius:6px; }
+  .bar-row:hover, .bar-row.is-pinned{ background: rgba(235,104,52,0.08); }
+  .bar-row.is-pinned .bar-name{ color: var(--accent); font-weight:600; }
+  .bar-name{ font-size:12.5px; color: var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar-track{ height:16px; border-radius:4px; background: var(--grid); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:4px; box-shadow: inset 0 0 0 1px var(--border); }
+  .bar-value{ font-family:"IBM Plex Mono", monospace; font-size:12px; text-align:right; font-variant-numeric: tabular-nums; }
+
+  .trend-panel svg{ width:100%; height:auto; display:block; }
+  .trend-line{ fill:none; stroke: var(--text-muted); stroke-width:1.6; opacity:.55; transition: stroke .15s ease, opacity .15s ease, stroke-width .15s ease; }
+  .trend-line.is-active{ stroke: var(--accent); stroke-width:2.6; opacity:1; }
+  .trend-axis text{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; fill: var(--text-muted); }
+  .trend-axis line, .trend-grid line{ stroke: var(--grid); }
+  .dotgroup .trend-dot{ fill: var(--text-muted); opacity: .55; }
+  .dotgroup.is-active .trend-dot{ fill: var(--accent); opacity: 1; }
+
+  .province-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+  .chip{
+    font: inherit; font-size:12px; padding:4px 11px; border-radius:100px; border:1px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor:pointer;
+  }
+  .chip:hover{ border-color: var(--accent); color: var(--accent); }
+  .chip.is-pinned{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight:600; }
+
+  .tooltip{
+    position: fixed; pointer-events:none; z-index: 40; background: var(--surface-raised);
+    border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:12.5px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.16); max-width:220px; transform: translate(-50%, -110%);
+  }
+  .tooltip .tt-title{ font-weight:600; margin-bottom:3px; }
+  .tooltip .tt-row{ display:flex; justify-content:space-between; gap:14px; color: var(--text-secondary); }
+  .tooltip .tt-row b{ font-family:"IBM Plex Mono", monospace; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  .empty-note{ font-size:13px; color: var(--text-muted); padding: 30px 10px; text-align:center; }
+
+  .site-footer{ border-top:1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:6px; }
+  .site-footer p{ margin:0; font-size:12px; color: var(--text-muted); max-width: 92ch; }
+  .site-footer a{ color: var(--text-secondary); }
+
+  [hidden]{ display:none !important; }
+</style>
+
+<div class="viz-root">
+  <div class="wrap">
+
+    <header class="masthead">
+      <p class="eyebrow">Red de Vigilancia Epidemiológica · Castilla y León</p>
+      <h1>Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</h1>
+      <p class="lede">Casos y tasa de incidencia (por 100.000 habitantes y año) de las enfermedades de declaración obligatoria (EDO) en las nueve provincias de Castilla y León, 2008–2024.</p>
+      <div class="meta-row">
+        <span class="badge">X Concurso de Datos Abiertos JCyL — Productos y Servicios</span>
+        <a class="source-link" href="https://datosabiertos.jcyl.es/web/jcyl/set/es/salud/enfermedades-declaracion-obligatoria-casos/1284839794579" target="_blank" rel="noopener">Fuente: Portal de Datos Abiertos de la Junta de Castilla y León</a>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Filtros">
+      <div class="search-block">
+        <label for="diseaseInput" class="search-label">Buscar una enfermedad de declaración obligatoria</label>
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.8" cy="8.8" r="6"/><line x1="13.3" y1="13.3" x2="18" y2="18"/></svg>
+          <input id="diseaseInput" list="diseaseList" autocomplete="off" placeholder="Escribe para buscar… (p. ej. Tuberculosis, Sarampión, Sífilis)" aria-describedby="quickPicksLabel" />
+          <button type="button" id="clearDisease" class="clear-btn" aria-label="Borrar selección" title="Borrar selección" hidden>✕</button>
+        </div>
+        <datalist id="diseaseList"></datalist>
+        <div class="quick-picks-row">
+          <span id="quickPicksLabel" class="quick-picks-label">Sugerencias:</span>
+          <div class="quick-picks" id="quickPicks"></div>
+        </div>
+      </div>
+      <div class="secondary-controls">
+        <div class="control-group metric-control">
+          <span class="control-label">Indicador</span>
+          <div class="segmented" role="group" aria-label="Indicador">
+            <button type="button" data-metric="tasa" class="seg-btn active">Tasa /100.000 hab.</button>
+            <button type="button" data-metric="casos" class="seg-btn">Casos</button>
+          </div>
+        </div>
+        <div class="control-group year-control">
+          <div class="year-head">
+            <span class="control-label">Año</span>
+            <span id="yearValue" class="year-value">2024</span>
+            <button id="playBtn" class="play-btn" aria-label="Reproducir evolución anual" title="Reproducir evolución anual">▶</button>
+          </div>
+          <input type="range" id="yearSlider" min="0" max="16" step="1" />
+          <div class="year-ticks" id="yearTicks"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="kpi-row" id="kpiRow" aria-label="Indicadores clave"></section>
+
+    <section class="main-grid">
+      <div class="panel map-panel">
+        <div class="panel-head">
+          <h2 id="mapTitle">Mapa por provincia</h2>
+          <p class="panel-sub" id="mapSub"></p>
+        </div>
+        <svg id="mapSvg" viewBox="0 0 600 480" role="img" aria-labelledby="mapTitle"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="panel rank-panel">
+        <div class="panel-head">
+          <h2>Ranking provincial</h2>
+          <p class="panel-sub" id="rankSub"></p>
+        </div>
+        <div class="bars" id="bars"></div>
+      </div>
+    </section>
+
+    <section class="panel trend-panel">
+      <div class="panel-head">
+        <h2>Evolución 2008–2024</h2>
+        <p class="panel-sub" id="trendSub">Pasa el cursor por el mapa o el ranking, o pulsa una provincia para fijarla en el tiempo.</p>
+      </div>
+      <svg id="lineSvg" viewBox="0 0 940 320" role="img" aria-label="Evolución temporal por provincia"></svg>
+      <div class="province-chips" id="provinceChips"></div>
+    </section>
+
+    <footer class="site-footer">
+      <p>Datos: <a href="https://datosabiertos.jcyl.es/web/jcyl/set/es/salud/enfermedades-declaracion-obligatoria-casos/1284839794579" target="_blank" rel="noopener">«Enfermedades de Declaración Obligatoria. Casos y tasas por provincia»</a>, Junta de Castilla y León — licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es_ES" target="_blank" rel="noopener">CC BY 4.0</a>. La tasa se expresa en casos por 100.000 habitantes y año, según la fuente oficial. Límites provinciales simplificados a partir de cartografía pública con fines de visualización.</p>
+      <p>Herramienta independiente elaborada con datos abiertos de la Junta de Castilla y León; no constituye una publicación oficial de la Junta.</p>
+    </footer>
+
+  </div>
+  <div class="tooltip" id="tooltip" hidden></div>
+</div>
+
+<script>window.EDO_DATA = __EDO_DATA_JSON__;</script>
+<script>window.CYL_GEO = __GEO_JSON__;</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = window.EDO_DATA;
+  var GEO = window.CYL_GEO;
+  var provinces = DATA.provinces;         // 9 names, index-aligned with GEO features by name
+  var diseases = DATA.diseases;           // 78 names
+  var years = DATA.years;                 // [2008..2024]
+
+  // ---- notable diseases for quick picks (must exist in dataset) ----
+  var QUICK = ["Tos Ferina","Sarampión","Tuberculosis (cualquier localización)","Sífilis","Varicela","Nuevas infecciones por VIH/Sida"].filter(function(n){ return diseases.indexOf(n) > -1; });
+
+  var state = {
+    diseaseIdx: null,   // no disease preselected — the user searches or picks one
+    year: 2024,
+    metric: "tasa",  // 'tasa' | 'casos'
+    pinned: null,    // province index
+    hovered: null,   // province index
+    playing: false,
+    playTimer: null
+  };
+
+  function seriesFor(diseaseIdx){ return DATA.series[String(diseaseIdx)] || {}; }
+  function yearsFor(diseaseIdx){
+    var s = seriesFor(diseaseIdx);
+    return Object.keys(s).map(Number).sort(function(a,b){ return a-b; });
+  }
+  function rowsFor(diseaseIdx, year){
+    var s = seriesFor(diseaseIdx);
+    return s[String(year)] || null; // array of [casos,tasa] x9, or null
+  }
+  function valueAt(rows, provIdx){
+    if(!rows) return null;
+    var pair = rows[provIdx];
+    if(!pair) return null;
+    return state.metric === "tasa" ? pair[1] : pair[0];
+  }
+
+  // ---------- Sequential color ramp ----------
+  var LIGHT_RAMP = ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"];
+  var DARK_RAMP = LIGHT_RAMP.slice().reverse();
+  function isDarkMode(){
+    var root = document.documentElement;
+    if(root.getAttribute("data-theme") === "dark") return true;
+    if(root.getAttribute("data-theme") === "light") return false;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function rampFor(){ return isDarkMode() ? DARK_RAMP : LIGHT_RAMP; }
+  function makeColorScale(maxVal){
+    var ramp = rampFor();
+    var n = ramp.length;
+    var domain = ramp.map(function(_, i){ return maxVal <= 0 ? 0 : (maxVal * i / (n-1)); });
+    return d3.scaleLinear().domain(domain).range(ramp).clamp(true);
+  }
+  function zeroSwatch(){
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue("--seq-0").trim();
+  }
+  function fmt(n, decimals){
+    if(n === null || n === undefined) return "—";
+    var opts = { minimumFractionDigits: decimals||0, maximumFractionDigits: decimals||0 };
+    return new Intl.NumberFormat("es-ES", opts).format(n);
+  }
+
+  // ---------- Build disease datalist + quick picks ----------
+  var diseaseList = document.getElementById("diseaseList");
+  diseases.forEach(function(name){
+    var opt = document.createElement("option");
+    opt.value = name;
+    diseaseList.appendChild(opt);
+  });
+  var diseaseInput = document.getElementById("diseaseInput");
+  var clearBtn = document.getElementById("clearDisease");
+  diseaseInput.value = "";
+  diseaseInput.addEventListener("change", function(){
+    var v = diseaseInput.value.trim();
+    if(v === ""){ clearDisease(); return; }
+    var idx = diseases.indexOf(v);
+    if(idx === -1){
+      diseaseInput.value = state.diseaseIdx !== null ? diseases[state.diseaseIdx] : "";
+      return;
+    }
+    setDisease(idx);
+  });
+  clearBtn.addEventListener("click", function(){ clearDisease(); diseaseInput.focus(); });
+
+  var quickPicksEl = document.getElementById("quickPicks");
+  var quickPickBtns = [];
+  QUICK.forEach(function(name){
+    var idx = diseases.indexOf(name);
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "quick-pick"; btn.textContent = name.length > 26 ? name.slice(0,24)+"…" : name;
+    btn.title = name; btn.dataset.idx = idx;
+    btn.addEventListener("click", function(){ setDisease(idx); });
+    quickPicksEl.appendChild(btn);
+    quickPickBtns.push(btn);
+  });
+
+  function syncQuickPicks(){
+    quickPickBtns.forEach(function(btn){
+      btn.classList.toggle("active", state.diseaseIdx !== null && Number(btn.dataset.idx) === state.diseaseIdx);
+    });
+  }
+
+  function setDisease(idx){
+    state.diseaseIdx = idx;
+    diseaseInput.value = diseases[idx];
+    clearBtn.hidden = false;
+    syncQuickPicks();
+    var avail = yearsFor(idx);
+    if(avail.indexOf(state.year) === -1){
+      state.year = avail[avail.length-1];
+    }
+    configureYearSlider();
+    renderAll();
+  }
+
+  function clearDisease(){
+    state.diseaseIdx = null;
+    diseaseInput.value = "";
+    clearBtn.hidden = true;
+    syncQuickPicks();
+    configureYearSlider();
+    renderAll();
+  }
+
+  // ---------- Metric toggle ----------
+  var segBtns = Array.prototype.slice.call(document.querySelectorAll(".seg-btn"));
+  segBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      segBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.metric = btn.getAttribute("data-metric");
+      renderAll();
+    });
+  });
+
+  // ---------- Year slider ----------
+  var yearSlider = document.getElementById("yearSlider");
+  var yearValueEl = document.getElementById("yearValue");
+  var yearTicksEl = document.getElementById("yearTicks");
+  var playBtn = document.getElementById("playBtn");
+  var currentAvailYears = years;
+
+  function configureYearSlider(){
+    currentAvailYears = state.diseaseIdx === null ? years.slice() : yearsFor(state.diseaseIdx);
+    yearSlider.min = 0;
+    yearSlider.max = currentAvailYears.length - 1;
+    yearSlider.value = currentAvailYears.indexOf(state.year);
+    yearValueEl.textContent = state.year;
+    yearTicksEl.innerHTML = "";
+    var first = document.createElement("span"); first.textContent = currentAvailYears[0];
+    var last = document.createElement("span"); last.textContent = currentAvailYears[currentAvailYears.length-1];
+    yearTicksEl.appendChild(first); yearTicksEl.appendChild(last);
+  }
+  yearSlider.addEventListener("input", function(){
+    state.year = currentAvailYears[Number(yearSlider.value)];
+    yearValueEl.textContent = state.year;
+    renderAll();
+  });
+  playBtn.addEventListener("click", function(){
+    state.playing = !state.playing;
+    playBtn.classList.toggle("playing", state.playing);
+    playBtn.textContent = state.playing ? "❚❚" : "▶";
+    if(state.playing){
+      state.playTimer = setInterval(function(){
+        var i = currentAvailYears.indexOf(state.year);
+        i = (i + 1) % currentAvailYears.length;
+        state.year = currentAvailYears[i];
+        yearSlider.value = i;
+        yearValueEl.textContent = state.year;
+        renderAll();
+      }, 900);
+    } else {
+      clearInterval(state.playTimer);
+    }
+  });
+
+  // ---------- Map (D3 geo) ----------
+  var mapSvg = d3.select("#mapSvg");
+  var mapW = 600, mapH = 480;
+  var projection = d3.geoMercator().fitSize([mapW - 20, mapH - 20], GEO);
+  projection.translate([projection.translate()[0] + 10, projection.translate()[1] + 10]);
+  var pathGen = d3.geoPath(projection);
+
+  var mapG = mapSvg.append("g");
+  var provPaths = mapG.selectAll("path.province-path")
+    .data(GEO.features)
+    .enter().append("path")
+    .attr("class", "province-path")
+    .attr("d", pathGen)
+    .attr("data-name", function(f){ return f.properties.Texto; });
+
+  var labelG = mapG.selectAll("text.province-label")
+    .data(GEO.features)
+    .enter().append("text")
+    .attr("class", "province-label")
+    .attr("x", function(f){ return pathGen.centroid(f)[0]; })
+    .attr("y", function(f){ return pathGen.centroid(f)[1]; })
+    .attr("text-anchor", "middle")
+    .text(function(f){ return f.properties.Texto; });
+
+  var tooltip = document.getElementById("tooltip");
+  function showTooltip(evt, provIdx){
+    var html;
+    if(state.diseaseIdx === null){
+      html = '<div class="tt-title">' + provinces[provIdx] + '</div>' +
+        '<div class="tt-row"><span>Elige una enfermedad para ver sus datos</span></div>';
+    } else {
+      var rows = rowsFor(state.diseaseIdx, state.year);
+      var pair = rows ? rows[provIdx] : null;
+      html = '<div class="tt-title">' + provinces[provIdx] + '</div>' +
+        '<div class="tt-row"><span>Casos</span><b>' + (pair ? fmt(pair[0]) : "—") + '</b></div>' +
+        '<div class="tt-row"><span>Tasa /100.000</span><b>' + (pair ? fmt(pair[1],2) : "—") + '</b></div>';
+    }
+    tooltip.innerHTML = html;
+    tooltip.hidden = false;
+    tooltip.style.left = evt.clientX + "px";
+    tooltip.style.top = evt.clientY + "px";
+  }
+  function hideTooltip(){ tooltip.hidden = true; }
+
+  provPaths
+    .on("mousemove", function(evt, f){
+      var provIdx = provinces.indexOf(f.properties.Texto);
+      state.hovered = provIdx;
+      showTooltip(evt, provIdx);
+      highlightTrend();
+    })
+    .on("mouseleave", function(){
+      state.hovered = null;
+      hideTooltip();
+      highlightTrend();
+    })
+    .on("click", function(evt, f){
+      var provIdx = provinces.indexOf(f.properties.Texto);
+      state.pinned = (state.pinned === provIdx) ? null : provIdx;
+      renderAll();
+    });
+
+  // ---------- Legend ----------
+  var legendEl = document.getElementById("legend");
+
+  // ---------- Bars ----------
+  var barsEl = document.getElementById("bars");
+
+  // ---------- KPIs ----------
+  var kpiEl = document.getElementById("kpiRow");
+
+  // ---------- Trend line chart ----------
+  var lineSvg = d3.select("#lineSvg");
+  var lineW = 940, lineH = 320;
+  var lineMargin = { top: 16, right: 18, bottom: 26, left: 46 };
+  var lineInnerW = lineW - lineMargin.left - lineMargin.right;
+  var lineInnerH = lineH - lineMargin.top - lineMargin.bottom;
+  var lineG = lineSvg.append("g").attr("transform", "translate(" + lineMargin.left + "," + lineMargin.top + ")");
+  var gridG = lineG.append("g").attr("class", "trend-grid");
+  var axisG = lineG.append("g").attr("class", "trend-axis");
+  var linesG = lineG.append("g").attr("class", "trend-lines");
+  var dotG = lineG.append("g").attr("class", "trend-dots");
+
+  var chipsEl = document.getElementById("provinceChips");
+  provinces.forEach(function(name, idx){
+    var chip = document.createElement("button");
+    chip.type = "button"; chip.className = "chip"; chip.textContent = name;
+    chip.addEventListener("click", function(){
+      state.pinned = (state.pinned === idx) ? null : idx;
+      renderAll();
+    });
+    chipsEl.appendChild(chip);
+  });
+
+  function highlightTrend(){
+    var active = state.pinned !== null ? state.pinned : state.hovered;
+    linesG.selectAll("path").classed("is-active", function(d){ return d.idx === active; });
+    dotG.selectAll("g.dotgroup").classed("is-active", function(d){ return d.idx === active; });
+    Array.prototype.forEach.call(chipsEl.children, function(chip, i){
+      chip.classList.toggle("is-pinned", state.pinned === i);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".bar-row"), function(row){
+      row.classList.toggle("is-pinned", state.pinned !== null && Number(row.dataset.idx) === state.pinned);
+    });
+    provPaths.classed("is-pinned", function(f){ return provinces.indexOf(f.properties.Texto) === state.pinned; });
+  }
+
+  // ---------- Master render ----------
+  function renderAll(){
+    if(state.diseaseIdx === null){
+      renderEmptyState();
+      return;
+    }
+    var rows = rowsFor(state.diseaseIdx, state.year);
+    var diseaseName = diseases[state.diseaseIdx];
+    var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
+
+    document.getElementById("mapSub").textContent = diseaseName + " · " + state.year + " · " + metricLabel;
+    document.getElementById("rankSub").textContent = "Provincias ordenadas por " + metricLabel + ", " + state.year + ".";
+
+    if(!rows){
+      mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
+      legendEl.innerHTML = '<p class="empty-note">No hay datos de «' + diseaseName + '» para ' + state.year + '.</p>';
+      barsEl.innerHTML = '<p class="empty-note">Sin datos para este año.</p>';
+      renderKPIs(null, diseaseName);
+      renderTrend(diseaseName);
+      return;
+    }
+
+    var values = provinces.map(function(_, i){ return valueAt(rows, i); });
+    var maxVal = Math.max.apply(null, values.filter(function(v){ return v !== null; }).concat([0]));
+    var colorScale = makeColorScale(maxVal || 1);
+    var zeroC = zeroSwatch();
+
+    function colorForIdx(i){
+      var v = values[i];
+      if(v === null) return zeroC;
+      if(v === 0) return zeroC;
+      return colorScale(v);
+    }
+
+    provPaths.attr("fill", function(f){
+      var i = provinces.indexOf(f.properties.Texto);
+      return colorForIdx(i);
+    });
+
+    // legend
+    var ramp = rampFor();
+    var gradId = "seqGrad";
+    var stops = ramp.map(function(c, i){ return c + " " + (i/(ramp.length-1)*100) + "%"; }).join(", ");
+    legendEl.innerHTML =
+      '<div class="legend-bar" style="background: linear-gradient(90deg, ' + stops + ');"></div>' +
+      '<div class="legend-ticks"><span>0' + (state.metric==='tasa' ? '' : ' casos') + '</span><span>' + fmt(maxVal, state.metric==='tasa'?1:0) + (state.metric==='tasa' ? ' /100.000' : ' casos') + '</span></div>' +
+      '<div class="legend-foot"><span class="legend-zero-swatch"></span><span>Sin casos declarados</span></div>';
+
+    // bars (ranking)
+    var order = provinces.map(function(_, i){ return i; })
+      .filter(function(i){ return values[i] !== null; })
+      .sort(function(a,b){ return values[b]-values[a]; });
+    barsEl.innerHTML = "";
+    order.forEach(function(i){
+      var row = document.createElement("div");
+      row.className = "bar-row"; row.dataset.idx = i;
+      var pct = maxVal > 0 ? (values[i]/maxVal*100) : 0;
+      row.innerHTML =
+        '<span class="bar-name">' + provinces[i] + '</span>' +
+        '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%; background:' + colorForIdx(i) + ';"></span></span>' +
+        '<span class="bar-value">' + fmt(values[i], state.metric==='tasa'?1:0) + '</span>';
+      row.addEventListener("mouseenter", function(){ state.hovered = i; highlightTrend(); });
+      row.addEventListener("mouseleave", function(){ state.hovered = null; highlightTrend(); });
+      row.addEventListener("click", function(){ state.pinned = (state.pinned===i) ? null : i; renderAll(); });
+      barsEl.appendChild(row);
+    });
+
+    renderKPIs(rows, diseaseName, values, maxVal);
+    renderTrend(diseaseName);
+    highlightTrend();
+  }
+
+  function renderEmptyState(){
+    document.getElementById("mapSub").textContent = "Elige o busca una enfermedad para ver el mapa.";
+    document.getElementById("rankSub").textContent = "Elige una enfermedad para ver el ranking provincial.";
+    document.getElementById("trendSub").textContent = "Elige una enfermedad para ver su evolución 2008–2024.";
+    mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
+    legendEl.innerHTML = '<p class="empty-note">Busca o elige una enfermedad para activar la leyenda.</p>';
+    barsEl.innerHTML = '<p class="empty-note">Busca o elige una enfermedad para ver el ranking de provincias.</p>';
+    kpiEl.innerHTML = '<div class="kpi-tile kpi-tile-wide"><span class="kpi-label">Para empezar</span>' +
+      '<span class="kpi-empty-msg">Busca una enfermedad de declaración obligatoria (p. ej. «Sarampión» o «Tuberculosis») o elige una de las sugerencias, para ver sus casos y tasas por provincia.</span></div>';
+    linesG.selectAll("*").remove();
+    dotG.selectAll("*").remove();
+    gridG.selectAll("*").remove();
+    axisG.selectAll("*").remove();
+    highlightTrend();
+  }
+
+  function renderKPIs(rows, diseaseName, values, maxVal){
+    if(!rows){
+      kpiEl.innerHTML = "";
+      return;
+    }
+    var totalCasos = rows.reduce(function(s,p){ return s + (p ? p[0] : 0); }, 0);
+    var tasas = rows.map(function(p){ return p ? p[1] : null; }).filter(function(v){ return v !== null; });
+    var meanTasa = tasas.length ? tasas.reduce(function(a,b){ return a+b; },0)/tasas.length : null;
+    var topIdx = values.indexOf(maxVal);
+    var topLabel = state.metric === "tasa" ? "mayor tasa" : "más casos";
+
+    // interannual variation on total casos
+    var prevYear = state.year - 1;
+    var prevRows = rowsFor(state.diseaseIdx, prevYear);
+    var deltaHtml = "—";
+    if(prevRows){
+      var prevTotal = prevRows.reduce(function(s,p){ return s + (p ? p[0] : 0); }, 0);
+      if(prevTotal > 0){
+        var pct = (totalCasos - prevTotal) / prevTotal * 100;
+        var sign = pct > 0 ? "+" : "";
+        var cls = pct > 0 ? "kpi-delta-up" : (pct < 0 ? "kpi-delta-down" : "");
+        deltaHtml = '<span class="' + cls + '">' + sign + fmt(pct,1) + '%</span>';
+      } else if(totalCasos > 0) {
+        deltaHtml = '<span class="kpi-delta-up">nuevo</span>';
+      } else {
+        deltaHtml = "0%";
+      }
+    }
+
+    var tiles = [
+      { label: "Casos totales · CyL", value: fmt(totalCasos), unit: state.year, sub: diseaseName.length>34?diseaseName.slice(0,32)+"…":diseaseName },
+      { label: "Tasa media provincial", value: meanTasa!==null ? fmt(meanTasa,1) : "—", unit: "/100.000 hab.", sub: "media simple de las 9 provincias" },
+      { label: "Provincia con " + topLabel, value: topIdx>-1 ? provinces[topIdx] : "—", unit:"", sub: topIdx>-1 ? fmt(values[topIdx], state.metric==='tasa'?1:0) + (state.metric==='tasa'?" /100.000":" casos") : "" },
+      { label: "Variación interanual", value: deltaHtml, unit:"", sub: "casos totales vs. " + prevYear, isHtml:true }
+    ];
+    kpiEl.innerHTML = tiles.map(function(t){
+      return '<div class="kpi-tile"><span class="kpi-label">' + t.label + '</span>' +
+        '<span class="kpi-value">' + (t.isHtml ? t.value : t.value) + (t.unit ? '<span class="unit">' + t.unit + '</span>' : '') + '</span>' +
+        '<span class="kpi-sub">' + t.sub + '</span></div>';
+    }).join("");
+  }
+
+  function renderTrend(diseaseName){
+    var avail = yearsFor(state.diseaseIdx);
+    document.getElementById("trendSub").textContent =
+      (avail.length ? ("Serie " + avail[0] + "–" + avail[avail.length-1] + " para " + diseaseName + ". ") : "") +
+      "Pasa el cursor por el mapa o el ranking, o pulsa una provincia para fijarla.";
+
+    if(avail.length < 2){
+      linesG.selectAll("*").remove(); dotG.selectAll("*").remove(); gridG.selectAll("*").remove(); axisG.selectAll("*").remove();
+      return;
+    }
+    var xScale = d3.scaleLinear().domain([avail[0], avail[avail.length-1]]).range([0, lineInnerW]);
+    var allVals = [];
+    var series = provinces.map(function(name, pi){
+      var pts = avail.map(function(y){
+        var rows = rowsFor(state.diseaseIdx, y);
+        var v = rows ? valueAt(rows, pi) : null;
+        if(v !== null) allVals.push(v);
+        return { year: y, v: v };
+      }).filter(function(p){ return p.v !== null; });
+      return { idx: pi, name: name, pts: pts };
+    });
+    var maxV = Math.max.apply(null, allVals.concat([1]));
+    var yScale = d3.scaleLinear().domain([0, maxV * 1.08]).range([lineInnerH, 0]);
+
+    // grid + axes
+    var yTicks = yScale.ticks(4);
+    gridG.selectAll("line").data(yTicks).join("line")
+      .attr("x1", 0).attr("x2", lineInnerW)
+      .attr("y1", function(d){ return yScale(d); }).attr("y2", function(d){ return yScale(d); });
+    axisG.selectAll(".ytick").data(yTicks).join(
+      function(enter){ return enter.append("text").attr("class","ytick"); }
+    ).attr("x", -8).attr("y", function(d){ return yScale(d)+3; }).attr("text-anchor","end")
+      .text(function(d){ return fmt(d, state.metric==='tasa'?1:0); });
+
+    var xTickYears = avail.filter(function(y){ return y % 2 === (avail[avail.length-1] % 2); });
+    axisG.selectAll(".xtick").data(xTickYears).join(
+      function(enter){ return enter.append("text").attr("class","xtick"); }
+    ).attr("x", function(d){ return xScale(d); }).attr("y", lineInnerH + 18).attr("text-anchor","middle")
+      .text(function(d){ return d; });
+    axisG.selectAll(".xaxisline").data([0]).join(
+      function(enter){ return enter.append("line").attr("class","xaxisline"); }
+    ).attr("x1",0).attr("x2",lineInnerW).attr("y1",lineInnerH).attr("y2",lineInnerH);
+
+    var lineGen = d3.line().x(function(d){ return xScale(d.year); }).y(function(d){ return yScale(d.v); }).curve(d3.curveMonotoneX);
+
+    linesG.selectAll("path").data(series, function(d){ return d.idx; }).join("path")
+      .attr("class","trend-line")
+      .attr("d", function(d){ return lineGen(d.pts); });
+
+    dotG.selectAll("g.dotgroup").data(series, function(d){ return d.idx; }).join(
+      function(enter){ return enter.append("g").attr("class","dotgroup"); }
+    ).each(function(d){
+      var g = d3.select(this);
+      var last = d.pts[d.pts.length-1];
+      g.selectAll("circle").data(last ? [last] : []).join("circle")
+        .attr("class","trend-dot")
+        .attr("cx", function(p){ return xScale(p.year); })
+        .attr("cy", function(p){ return yScale(p.v); })
+        .attr("r", 3);
+    });
+
+    highlightTrend();
+  }
+
+  configureYearSlider();
+  renderAll();
+})();
+</script>

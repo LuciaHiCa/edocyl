@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Mapa interactivo de casos y tasas de incidencia de las Enfermedades de Declaración Obligatoria en las nueve provincias de Castilla y León, 2008–2024. Datos abiertos de la Junta de Castilla y León.">
+<meta name="author" content="X Concurso de Datos Abiertos de la Junta de Castilla y León">
+<meta property="og:title" content="Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León">
+<meta property="og:description" content="Mapa interactivo de casos y tasas de incidencia de las Enfermedades de Declaración Obligatoria en las nueve provincias de Castilla y León, 2008–2024. Datos abiertos de la Junta de Castilla y León.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+<style>
+  /* Reset equivalente al que Artifact inyecta, para que la pagina autonoma
+     se vea exactamente igual que el artifact. */
+  html{ color-scheme: light dark; }
+  body{ margin: 0; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f3f2ee; }
+  img{ max-width: 100%; }
+  [hidden]{ display: none !important; }
+  .viz-root{ min-height: 100vh; }
+  @media (prefers-color-scheme: dark){
+    body{ background: #0d0d0d; }
+  }
+</style>
+<title>Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  .viz-root{
+    color-scheme: light;
+    --page-bg: #f3f2ee;
+    --surface: #fdfdfb;
+    --surface-raised: #ffffff;
+    --text-primary: #14181c;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --border: rgba(20,24,28,0.12);
+    --grid: #e3e1d8;
+    --accent: #eb6834;
+    --accent-ink: #ffffff;
+    --seq-0: #dfe6ea;   /* zero-case swatch, desaturated */
+    --seq-100: #cde2fb; --seq-150: #b7d3f6; --seq-200: #9ec5f4; --seq-250: #86b6ef;
+    --seq-300: #6da7ec; --seq-350: #5598e7; --seq-400: #3987e5; --seq-450: #2a78d6;
+    --seq-500: #256abf; --seq-550: #1c5cab; --seq-600: #184f95; --seq-650: #104281; --seq-700: #0d366b;
+    --focus-ring: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .viz-root{
+      color-scheme: dark;
+      --page-bg: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-raised: #212120;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8f8d86;
+      --border: rgba(255,255,255,0.12);
+      --grid: #2c2c2a;
+      --accent: #d95926;
+      --accent-ink: #ffffff;
+      --seq-0: #232c31;
+    }
+  }
+  :root[data-theme="dark"] .viz-root{
+    color-scheme: dark;
+    --page-bg: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #212120;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8d86;
+    --border: rgba(255,255,255,0.12);
+    --grid: #2c2c2a;
+    --accent: #d95926;
+    --accent-ink: #ffffff;
+    --seq-0: #232c31;
+  }
+
+  *{ box-sizing: border-box; }
+  .viz-root{
+    background: var(--page-bg);
+    color: var(--text-primary);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.45;
+    padding: 28px 20px 60px;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+  h1,h2{ font-family: "Source Serif 4", Georgia, serif; text-wrap: balance; margin: 0; }
+  a{ color: var(--accent); }
+
+  /* ---------- Masthead ---------- */
+  .masthead{ display:flex; flex-direction:column; gap:10px; padding-bottom: 6px; }
+  .eyebrow{ margin:0; font-size:12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); font-weight:600; }
+  .masthead h1{ font-size: clamp(26px, 4vw, 38px); font-weight: 600; letter-spacing: -0.01em; }
+  .lede{ margin:0; max-width: 62ch; color: var(--text-secondary); font-size: 15px; }
+  .meta-row{ display:flex; flex-wrap:wrap; gap: 10px 16px; align-items:center; margin-top: 4px; }
+  .badge{ font-size:11.5px; font-weight:600; letter-spacing:.02em; color: var(--accent); border:1px solid var(--accent); border-radius:100px; padding: 4px 11px; }
+  .source-link{ font-size: 13px; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+  .source-link:hover{ color: var(--accent); }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex; flex-direction:column; gap:18px;
+    background: var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding: 20px 22px 18px;
+  }
+  .control-group{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .control-label, label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: var(--text-muted); }
+
+  /* -- search: the primary control on this page -- */
+  .search-block{ display:flex; flex-direction:column; gap:9px; }
+  .search-label{ font-size:13px; font-weight:600; color: var(--text-primary); }
+  .search-wrap{ position:relative; }
+  .search-icon{
+    position:absolute; left:16px; top:50%; transform:translateY(-50%);
+    width:21px; height:21px; fill:none; stroke: var(--text-muted); stroke-width:1.8;
+    stroke-linecap:round; pointer-events:none;
+  }
+  #diseaseInput{
+    font: inherit; font-size:17px; padding:15px 46px; border-radius:12px; border:1.5px solid var(--border);
+    background: var(--surface-raised); color: var(--text-primary); width:100%;
+  }
+  #diseaseInput::placeholder{ color: var(--text-muted); font-size:15px; }
+  #diseaseInput:focus-visible{
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(235,104,52,0.16);
+  }
+  .clear-btn{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    width:28px; height:28px; border-radius:100px; border:none; background:transparent;
+    color: var(--text-muted); cursor:pointer; font-size:15px; line-height:1;
+  }
+  .clear-btn:hover{ color: var(--accent); background: rgba(235,104,52,0.1); }
+  .quick-picks-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .quick-picks-label{ font-size:12px; color: var(--text-muted); }
+  .quick-picks{ display:flex; flex-wrap:wrap; gap:6px; }
+  .quick-pick{
+    font: inherit; font-size:12.5px; padding:4px 12px; border-radius:100px; border:1px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor:pointer;
+  }
+  .quick-pick:hover{ border-color: var(--accent); color: var(--accent); }
+  .quick-pick.active{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  /* -- secondary controls: metric + year -- */
+  .secondary-controls{
+    display:grid; grid-template-columns: 1fr 1.6fr; gap: 18px;
+    padding-top:16px; border-top:1px solid var(--border);
+  }
+  @media (max-width: 800px){ .secondary-controls{ grid-template-columns: 1fr; } }
+
+  .segmented{ display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; width:fit-content; }
+  .seg-btn{
+    font: inherit; font-size:13px; padding:8px 13px; border:none; background: var(--surface-raised);
+    color: var(--text-secondary); cursor:pointer; border-right:1px solid var(--border);
+  }
+  .seg-btn:last-child{ border-right:none; }
+  .seg-btn.active{ background: var(--accent); color: var(--accent-ink); font-weight:600; }
+
+  .year-control{ gap:4px; }
+  .year-head{ display:flex; align-items:baseline; gap:10px; }
+  .year-value{ font-family:"IBM Plex Mono", monospace; font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .play-btn{
+    margin-left:auto; width:26px; height:26px; border-radius:100px; border:1px solid var(--border);
+    background: var(--surface-raised); color: var(--text-secondary); cursor:pointer; font-size:11px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .play-btn:hover{ border-color: var(--accent); color: var(--accent); }
+  .play-btn.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  #yearSlider{ width:100%; accent-color: var(--accent); }
+  .year-ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono", monospace; font-size:10px; color: var(--text-muted); }
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
+  @media (max-width: 800px){ .kpi-row{ grid-template-columns: repeat(2,1fr); } }
+  .kpi-tile{
+    background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .kpi-label{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color: var(--text-muted); }
+  .kpi-value{ font-family:"IBM Plex Mono", monospace; font-size: clamp(20px,2.6vw,26px); font-weight:600; font-variant-numeric: tabular-nums; }
+  .kpi-sub{ font-size:12px; color: var(--text-secondary); }
+  .kpi-value .unit{ font-size:0.55em; color: var(--text-muted); font-weight:500; margin-left:3px; }
+  .kpi-delta-up{ color: #b5432a; }
+  .kpi-delta-down{ color: #1c5cab; }
+  .kpi-tile-wide{ grid-column: 1 / -1; }
+  .kpi-empty-msg{ font-size:14px; color: var(--text-secondary); font-weight:400; font-family:"IBM Plex Sans", sans-serif; }
+
+  /* ---------- Panels ---------- */
+  .panel{ background: var(--surface); border:1px solid var(--border); border-radius:16px; padding: 18px 20px 20px; }
+  .panel-head{ display:flex; flex-direction:column; gap:3px; margin-bottom:12px; }
+  .panel-head h2{ font-size:19px; font-weight:600; }
+  .panel-sub{ margin:0; font-size:12.5px; color: var(--text-secondary); }
+
+  .main-grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap:18px; align-items:start; }
+  @media (max-width: 900px){ .main-grid{ grid-template-columns: 1fr; } }
+
+  #mapSvg{ width:100%; height:auto; display:block; }
+  .province-path{ stroke: var(--surface); stroke-width:1.6; cursor:pointer; transition: filter .12s ease; }
+  .province-path:hover{ filter: brightness(1.06); }
+  .province-path.is-pinned{ stroke: var(--accent); stroke-width:2.6; }
+  .province-label{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; fill: var(--text-primary); pointer-events:none; paint-order: stroke; stroke: var(--surface); stroke-width:3px; }
+
+  .legend{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+  .legend-bar{ height:10px; border-radius:6px; border:1px solid var(--border); }
+  .legend-ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono", monospace; font-size:10.5px; color: var(--text-muted); }
+  .legend-foot{ display:flex; align-items:center; gap:8px; font-size:11.5px; color: var(--text-secondary); }
+  .legend-zero-swatch{ width:12px; height:12px; border-radius:3px; background: var(--seq-0); border:1px solid var(--border); display:inline-block; }
+
+  .bars{ display:flex; flex-direction:column; gap:9px; }
+  .bar-row{ display:grid; grid-template-columns: 82px 1fr 64px; align-items:center; gap:10px; cursor:pointer; padding:3px 4px; border-radius:6px; }
+  .bar-row:hover, .bar-row.is-pinned{ background: rgba(235,104,52,0.08); }
+  .bar-row.is-pinned .bar-name{ color: var(--accent); font-weight:600; }
+  .bar-name{ font-size:12.5px; color: var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar-track{ height:16px; border-radius:4px; background: var(--grid); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:4px; box-shadow: inset 0 0 0 1px var(--border); }
+  .bar-value{ font-family:"IBM Plex Mono", monospace; font-size:12px; text-align:right; font-variant-numeric: tabular-nums; }
+
+  .trend-panel svg{ width:100%; height:auto; display:block; }
+  .trend-line{ fill:none; stroke: var(--text-muted); stroke-width:1.6; opacity:.55; transition: stroke .15s ease, opacity .15s ease, stroke-width .15s ease; }
+  .trend-line.is-active{ stroke: var(--accent); stroke-width:2.6; opacity:1; }
+  .trend-axis text{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; fill: var(--text-muted); }
+  .trend-axis line, .trend-grid line{ stroke: var(--grid); }
+  .dotgroup .trend-dot{ fill: var(--text-muted); opacity: .55; }
+  .dotgroup.is-active .trend-dot{ fill: var(--accent); opacity: 1; }
+
+  .province-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+  .chip{
+    font: inherit; font-size:12px; padding:4px 11px; border-radius:100px; border:1px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor:pointer;
+  }
+  .chip:hover{ border-color: var(--accent); color: var(--accent); }
+  .chip.is-pinned{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight:600; }
+
+  .tooltip{
+    position: fixed; pointer-events:none; z-index: 40; background: var(--surface-raised);
+    border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:12.5px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.16); max-width:220px; transform: translate(-50%, -110%);
+  }
+  .tooltip .tt-title{ font-weight:600; margin-bottom:3px; }
+  .tooltip .tt-row{ display:flex; justify-content:space-between; gap:14px; color: var(--text-secondary); }
+  .tooltip .tt-row b{ font-family:"IBM Plex Mono", monospace; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  .empty-note{ font-size:13px; color: var(--text-muted); padding: 30px 10px; text-align:center; }
+
+  .site-footer{ border-top:1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:6px; }
+  .site-footer p{ margin:0; font-size:12px; color: var(--text-muted); max-width: 92ch; }
+  .site-footer a{ color: var(--text-secondary); }
+
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+
+    <header class="masthead">
+      <p class="eyebrow">Red de Vigilancia Epidemiológica · Castilla y León</p>
+      <h1>Mapa de Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</h1>
+      <p class="lede">Casos y tasa de incidencia (por 100.000 habitantes y año) de las enfermedades de declaración obligatoria (EDO) en las nueve provincias de Castilla y León, 2008–2024.</p>
+      <div class="meta-row">
+        <span class="badge">X Concurso de Datos Abiertos JCyL — Productos y Servicios</span>
+        <a class="source-link" href="https://datosabiertos.jcyl.es/web/jcyl/set/es/salud/enfermedades-declaracion-obligatoria-casos/1284839794579" target="_blank" rel="noopener">Fuente: Portal de Datos Abiertos de la Junta de Castilla y León</a>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Filtros">
+      <div class="search-block">
+        <label for="diseaseInput" class="search-label">Buscar una enfermedad de declaración obligatoria</label>
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.8" cy="8.8" r="6"/><line x1="13.3" y1="13.3" x2="18" y2="18"/></svg>
+          <input id="diseaseInput" list="diseaseList" autocomplete="off" placeholder="Escribe para buscar… (p. ej. Tuberculosis, Sarampión, Sífilis)" aria-describedby="quickPicksLabel" />
+          <button type="button" id="clearDisease" class="clear-btn" aria-label="Borrar selección" title="Borrar selección" hidden>✕</button>
+        </div>
+        <datalist id="diseaseList"></datalist>
+        <div class="quick-picks-row">
+          <span id="quickPicksLabel" class="quick-picks-label">Sugerencias:</span>
+          <div class="quick-picks" id="quickPicks"></div>
+        </div>
+      </div>
+      <div class="secondary-controls">
+        <div class="control-group metric-control">
+          <span class="control-label">Indicador</span>
+          <div class="segmented" role="group" aria-label="Indicador">
+            <button type="button" data-metric="tasa" class="seg-btn active">Tasa /100.000 hab.</button>
+            <button type="button" data-metric="casos" class="seg-btn">Casos</button>
+          </div>
+        </div>
+        <div class="control-group year-control">
+          <div class="year-head">
+            <span class="control-label">Año</span>
+            <span id="yearValue" class="year-value">2024</span>
+            <button id="playBtn" class="play-btn" aria-label="Reproducir evolución anual" title="Reproducir evolución anual">▶</button>
+          </div>
+          <input type="range" id="yearSlider" min="0" max="16" step="1" />
+          <div class="year-ticks" id="yearTicks"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="kpi-row" id="kpiRow" aria-label="Indicadores clave"></section>
+
+    <section class="main-grid">
+      <div class="panel map-panel">
+        <div class="panel-head">
+          <h2 id="mapTitle">Mapa por provincia</h2>
+          <p class="panel-sub" id="mapSub"></p>
+        </div>
+        <svg id="mapSvg" viewBox="0 0 600 480" role="img" aria-labelledby="mapTitle"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="panel rank-panel">
+        <div class="panel-head">
+          <h2>Ranking provincial</h2>
+          <p class="panel-sub" id="rankSub"></p>
+        </div>
+        <div class="bars" id="bars"></div>
+      </div>
+    </section>
+
+    <section class="panel trend-panel">
+      <div class="panel-head">
+        <h2>Evolución 2008–2024</h2>
+        <p class="panel-sub" id="trendSub">Pasa el cursor por el mapa o el ranking, o pulsa una provincia para fijarla en el tiempo.</p>
+      </div>
+      <svg id="lineSvg" viewBox="0 0 940 320" role="img" aria-label="Evolución temporal por provincia"></svg>
+      <div class="province-chips" id="provinceChips"></div>
+    </section>
+
+    <footer class="site-footer">
+      <p>Datos: <a href="https://datosabiertos.jcyl.es/web/jcyl/set/es/salud/enfermedades-declaracion-obligatoria-casos/1284839794579" target="_blank" rel="noopener">«Enfermedades de Declaración Obligatoria. Casos y tasas por provincia»</a>, Junta de Castilla y León — licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es_ES" target="_blank" rel="noopener">CC BY 4.0</a>. La tasa se expresa en casos por 100.000 habitantes y año, según la fuente oficial. Límites provinciales simplificados a partir de cartografía pública con fines de visualización.</p>
+      <p>Herramienta independiente elaborada con datos abiertos de la Junta de Castilla y León; no constituye una publicación oficial de la Junta.</p>
+    </footer>
+
+  </div>
+  <div class="tooltip" id="tooltip" hidden></div>
+</div>
+
+<script>window.EDO_DATA = {"provinces":["Ávila","Burgos","León","Palencia","Salamanca","Segovia","Soria","Valladolid","Zamora"],"diseases":["Botulismo","Brucelosis","COVID-2019","Campilobacteriosis","Carbunco","Criptosporidiosis","Cólera","Dengue","Difteria","Encefalopatías espongiformes","Enfermedad de Lyme","Enfermedad invasiva Estreptococo grupo A (SGAi)","Enfermedad invasora Haemophilus influenzae","Enfermedad invasora por S. pneumoniae","Enfermedad meningocócica","Enfermedad por virus Chikungunya","Enfermedad por virus Zika","Fiebre Q","Fiebre amarilla","Fiebre del Dengue","Fiebre del Nilo Occidental","Fiebre exantemática mediterránea","Fiebre recurrente por garrapatas","Fiebres hemorrágicas virales","Fiebres tifoidea y paratifoidea","Giardiasis","Gripe","Gripe Grave","Hepatitis A","Hepatitis B","Hepatitis C","Herpes Zoster","Hidatidosis","Infecciones por Chlamydia","Infección Respiratoria Aguda Grave (IRAG)","Infección gonocócica","Infección humana por virus de la gripe aviar","Infección por E. coli enterohemorrágica","Infección por E. coli productora de toxina shiga o vero (STEC/VTEC)","Infección por cepas de Escherichia coli productoras de toxina Shiga o Vero","Infección por nuevo virus de la gripe A(H1N1)","Legionelosis","Leishmaniasis","Lepra","Leptospirosis","Listeriosis","MPOX","Meningitis víricas","Nuevas infecciones por VIH/Sida","Otras ETS","Otras ITS","Otras Meningitis Bacterianas","Otras hepatitis víricas","Paludismo","Parotiditis","Parálisis flácida aguda","Peste","Poliomielitis","Rabia","Rubéola","Rubéola congénita","SIDA","Salmonelosis de transmisión alimentaria","Sarampión","Shigelosis","Sífilis","Sífilis congénita","Síndrome respiratorio agudo severo","Tifus exantemático","Tos Ferina","Toxoplasmosis","Triquinosis","Tuberculosis (cualquier localización)","Tularemia","Tétanos","Tétanos neonatal","Varicela","Yersiniosis"],"years":[2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024],"series":{"0":{"2024":[[1,0.62],[0,0.0],[0,0.0],[1,0.63],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[1,0.63],[1,0.31],[2,1.29],[0,0.0],[2,0.38],[1,0.6]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.13],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.58]],"2020":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[2,0.6],[0,0.0],[1,1.11],[1,0.19],[0,0.0]],"2019":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[2,0.6],[0,0.0],[0,0.0],[0,0.0],[2,1.15]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.0],[1,0.0],[0,0.0],[0,0.0],[4,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[2,1.19],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[5,1.44],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.19],[2,1.03]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.56],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2008":[[0,0.0],[0,0.0],[2,0.4],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"1":{"2024":[[0,0.0],[1,0.28],[2,0.45],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.57],[0,0.0]],"2023":[[1,0.63],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[2,0.61],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2021":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.3],[1,0.65],[1,1.11],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.6],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[2,1.24],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.0]],"2017":[[0,0.0],[0,0.0],[2,0.43],[0,0.0],[3,0.9],[0,0.0],[0,0.0],[1,0.19],[1,0.56]],"2016":[[0,0.0],[0,0.0],[2,0.41],[1,0.6],[0,0.0],[1,0.63],[0,0.0],[0,0.0],[1,0.54]],"2015":[[1,0.6],[0,0.0],[0,0.0],[0,0.0],[4,1.16],[0,0.0],[1,1.08],[0,0.0],[0,0.0]],"2014":[[2,1.18],[1,0.27],[1,0.2],[0,0.0],[5,1.44],[0,0.0],[0,0.0],[2,0.38],[1,0.53]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2011":[[2,1.16],[2,0.53],[0,0.0],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[1,0.52]],"2010":[[3,1.75],[0,0.0],[2,0.4],[0,0.0],[2,0.57],[2,1.22],[0,0.0],[0,0.0],[1,0.51]],"2009":[[3,1.75],[1,0.27],[2,0.4],[0,0.0],[2,0.56],[4,2.43],[0,0.0],[1,0.19],[1,0.51]],"2008":[[0,0.0],[7,1.87],[5,1.0],[1,0.58],[3,0.85],[2,1.22],[1,1.06],[1,0.19],[1,0.51]]},"3":{"2024":[[58,36.15],[274,76.17],[181,40.42],[152,96.16],[203,61.97],[124,79.17],[61,67.72],[376,71.6],[59,35.49]],"2023":[[45,28.41],[215,60.19],[104,23.24],[184,116.64],[187,57.16],[57,36.71],[27,30.17],[312,59.88],[66,39.67]],"2022":[[48,30.35],[110,30.98],[49,10.93],[105,66.45],[124,38.05],[28,18.21],[12,13.58],[254,49.04],[17,10.17]],"2021":[[66,41.54],[181,50.89],[99,21.56],[85,53.16],[173,52.25],[65,42.15],[16,17.8],[264,50.7],[33,19.22]],"2020":[[84,52.87],[129,36.27],[89,19.38],[75,46.9],[160,48.33],[25,16.21],[9,10.01],[287,55.11],[48,27.96]],"2019":[[71,44.8],[180,50.41],[44,9.49],[89,54.93],[114,34.39],[77,50.21],[29,32.73],[302,58.09],[37,21.2]],"2018":[[70,43.6],[168,0.0],[75,0.0],[195,0.0],[139,0.0],[104,0.0],[35,0.0],[320,0.0],[45,0.0]],"2017":[[60,37.34],[143,39.93],[95,20.29],[63,38.56],[120,35.97],[98,63.56],[75,84.36],[288,55.26],[58,32.69]],"2016":[[31,18.53],[116,31.76],[82,16.92],[26,15.54],[109,31.7],[109,68.5],[50,53.98],[274,51.83],[39,20.92]],"2015":[[26,15.54],[126,34.49],[65,13.42],[29,17.33],[85,24.68],[103,64.73],[86,92.84],[262,49.56],[35,18.78]],"2014":[[31,18.29],[109,29.56],[102,20.85],[51,30.22],[83,23.9],[92,57.01],[89,95.11],[274,51.59],[70,37.03]],"2013":[[31,18.29],[57,15.46],[48,9.81],[82,48.59],[92,26.49],[93,57.63],[54,57.71],[151,28.43],[48,25.39]],"2012":[[14,8.17],[50,13.33],[48,9.71],[44,25.77],[68,19.4],[47,28.71],[67,70.88],[103,19.28],[41,21.4]],"2011":[[14,8.11],[76,20.23],[47,9.44],[40,23.3],[51,14.45],[55,33.5],[35,36.76],[117,21.87],[29,15.0]],"2010":[[16,9.31],[49,13.07],[51,10.21],[30,17.39],[6,1.7],[49,29.83],[72,75.58],[85,15.93],[18,9.27]],"2009":[[10,5.82],[44,11.72],[28,5.6],[31,17.89],[11,3.1],[40,24.26],[68,71.5],[36,6.76],[31,15.84]],"2008":[[7,4.07],[54,14.45],[18,3.6],[40,23.06],[14,3.96],[33,20.13],[49,51.77],[41,7.75],[41,20.79]]},"4":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[1,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"6":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"5":{"2024":[[8,4.99],[4,1.11],[11,2.46],[12,7.59],[9,2.75],[3,1.92],[2,2.22],[13,2.48],[2,1.2]],"2023":[[22,13.89],[78,21.84],[44,9.83],[74,46.91],[26,7.95],[14,9.02],[4,4.47],[24,4.61],[2,1.2]],"2022":[[4,2.53],[0,0.0],[1,0.22],[3,1.9],[5,1.53],[0,0.0],[0,0.0],[1,0.19],[1,0.6]],"2021":[[2,1.26],[1,0.28],[0,0.0],[1,0.63],[1,0.3],[0,0.0],[0,0.0],[3,0.58],[0,0.0]],"2020":[[1,0.63],[0,0.0],[0,0.0],[0,0.0],[4,1.21],[0,0.0],[0,0.0],[8,1.54],[0,0.0]],"2019":[[0,0.0],[0,0.0],[1,0.22],[1,0.62],[6,1.81],[0,0.0],[1,1.13],[9,1.73],[0,0.0]],"2018":[[1,0.62],[0,0.0],[3,0.0],[2,0.0],[10,0.0],[1,0.0],[0,0.0],[17,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[11,2.11],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.57],[5,2.68]],"2015":[[2,1.2],[0,0.0],[5,1.03],[0,0.0],[3,0.87],[1,0.63],[1,1.08],[15,2.84],[1,0.54]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[4,0.75],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[7,2.02],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2012":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[4,1.14],[0,0.0],[0,0.0],[4,0.75],[0,0.0]],"2011":[[0,0.0],[1,0.27],[1,0.2],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2010":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[5,0.94],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,1.21],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[2,0.4],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"7":{"2024":[[3,1.87],[4,1.11],[3,0.67],[3,1.9],[2,0.61],[1,0.64],[2,2.22],[6,1.14],[0,0.0]],"2023":[[0,0.0],[1,0.28],[2,0.45],[2,1.27],[2,0.61],[0,0.0],[2,2.24],[2,0.38],[2,1.2]]},"8":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"9":{"2024":[[2,1.25],[0,0.0],[4,0.89],[1,0.63],[5,1.53],[0,0.0],[1,1.11],[2,0.38],[0,0.0]],"2023":[[0,0.0],[1,0.28],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[1,1.12],[0,0.0],[0,0.0]],"2022":[[0,0.0],[3,0.84],[1,0.22],[0,0.0],[4,1.23],[2,1.3],[0,0.0],[1,0.19],[1,0.6]],"2021":[[0,0.0],[0,0.0],[1,0.22],[2,1.25],[0,0.0],[0,0.0],[0,0.0],[4,0.77],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[3,0.58],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.13],[2,0.38],[0,0.0]],"2018":[[0,0.0],[2,0.0],[0,0.0],[1,0.0],[1,0.0],[0,0.0],[0,0.0],[3,0.0],[0,0.0]],"2017":[[1,0.62],[0,0.0],[1,0.21],[0,0.0],[0,0.0],[2,1.3],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.58],[0,0.0],[1,1.08],[1,0.19],[1,0.54]],"2015":[[2,1.2],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[1,0.63],[1,1.08],[1,0.19],[0,0.0]],"2014":[[1,0.59],[0,0.0],[2,0.41],[0,0.0],[1,0.29],[0,0.0],[1,1.07],[4,0.75],[1,0.53]],"2013":[[0,0.0],[0,0.0],[2,0.41],[0,0.0],[2,0.58],[0,0.0],[0,0.0],[0,0.0],[1,0.53]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.61],[0,0.0],[2,0.37],[1,0.52]],"2011":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[2,1.22],[0,0.0],[1,0.19],[1,0.52]],"2010":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[1,0.28],[1,0.61],[1,1.05],[1,0.19],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[1,0.2],[1,0.58],[2,0.57],[2,1.22],[0,0.0],[2,0.38],[0,0.0]]},"10":{"2024":[[3,1.87],[8,2.22],[3,0.67],[1,0.63],[1,0.31],[1,0.64],[0,0.0],[3,0.57],[0,0.0]],"2023":[[2,1.26],[6,1.68],[10,2.23],[0,0.0],[1,0.31],[0,0.0],[2,2.24],[2,0.38],[1,0.6]],"2022":[[2,1.26],[2,0.56],[3,0.67],[1,0.63],[0,0.0],[2,1.3],[1,1.13],[1,0.19],[0,0.0]],"2021":[[6,3.78],[1,0.28],[4,0.87],[1,0.63],[2,0.6],[0,0.0],[2,2.22],[5,0.96],[0,0.0]],"2020":[[1,0.63],[5,1.41],[4,0.87],[0,0.0],[0,0.0],[0,0.0],[1,1.11],[0,0.0],[1,0.58]],"2019":[[0,0.0],[4,1.12],[2,0.43],[2,1.23],[0,0.0],[0,0.0],[0,0.0],[4,0.77],[0,0.0]],"2018":[[2,1.24],[3,0.0],[0,0.0],[1,0.0],[1,0.0],[0,0.0],[0,0.0],[7,0.0],[0,0.0]],"2017":[[3,1.87],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[1,0.05],[0,0.0],[2,0.38],[2,1.13]],"2016":[[1,0.6],[1,0.27],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[1,0.27],[1,0.21],[0,0.0],[0,0.0],[1,0.63],[0,0.0],[4,0.76],[0,0.0]],"2014":[[0,0.0],[1,0.27],[2,0.41],[1,0.59],[1,0.29],[0,0.0],[0,0.0],[1,0.19],[1,0.53]],"2013":[[1,0.59],[1,0.27],[0,0.0],[2,1.19],[1,0.29],[1,0.62],[0,0.0],[0,0.0],[1,0.53]],"2012":[[0,0.0],[2,0.53],[0,0.0],[1,0.59],[0,0.0],[0,0.0],[1,1.06],[0,0.0],[1,0.52]],"2011":[[0,0.0],[3,0.8],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[1,0.27],[0,0.0],[1,0.58],[0,0.0],[1,0.61],[0,0.0],[1,0.19],[0,0.0]],"2009":[[0,0.0],[2,0.53],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2008":[[0,0.0],[5,1.34],[1,0.2],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"11":{"2024":[[1,0.62],[9,2.5],[7,1.56],[2,1.27],[0,0.0],[0,0.0],[1,1.11],[6,1.14],[3,1.8]],"2023":[[1,0.63],[10,2.8],[3,0.67],[4,2.54],[0,0.0],[1,0.64],[0,0.0],[13,2.49],[2,1.2]]},"12":{"2024":[[2,1.25],[13,3.61],[6,1.34],[0,0.0],[7,2.14],[4,2.55],[3,3.33],[6,1.14],[3,1.8]],"2023":[[4,2.53],[3,0.84],[7,1.56],[1,0.63],[3,0.92],[0,0.0],[2,2.24],[8,1.54],[3,1.8]],"2022":[[2,1.26],[1,0.28],[1,0.22],[1,0.63],[1,0.31],[1,0.65],[0,0.0],[3,0.58],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,1.3],[0,0.0],[2,0.38],[3,1.75]],"2020":[[2,1.26],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[1,0.65],[1,1.11],[2,0.38],[1,0.58]],"2019":[[4,2.52],[4,1.12],[1,0.22],[1,0.62],[1,0.3],[3,1.96],[3,3.39],[4,0.77],[1,0.57]],"2018":[[0,0.0],[5,0.0],[3,0.0],[4,0.0],[0,0.0],[4,0.0],[0,0.0],[2,0.0],[1,0.0]],"2017":[[0,0.0],[1,0.28],[1,0.21],[0,0.0],[0,0.0],[1,0.05],[2,2.25],[3,0.58],[4,2.25]],"2016":[[0,0.0],[4,1.1],[0,0.0],[0,0.0],[0,0.0],[5,3.14],[3,3.24],[1,0.19],[5,2.68]],"2015":[[2,1.2],[3,0.82],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,2.16],[1,0.19],[0,0.0]],"2014":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[3,0.86],[2,1.24],[0,0.0],[2,0.38],[2,1.06]],"2013":[[0,0.0],[2,0.54],[0,0.0],[0,0.0],[2,0.58],[2,1.24],[1,1.07],[0,0.0],[0,0.0]],"2012":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[2,1.22],[0,0.0],[0,0.0],[1,0.52]],"2011":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[2,0.57],[1,0.61],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,1.83],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"13":{"2024":[[6,3.74],[35,9.73],[50,11.17],[9,5.69],[21,6.41],[22,14.05],[7,7.77],[28,5.33],[17,10.23]],"2023":[[5,3.16],[24,6.72],[40,8.94],[7,4.44],[23,7.03],[11,7.08],[11,12.29],[32,6.14],[11,6.61]],"2022":[[2,1.26],[20,5.63],[22,4.91],[3,1.9],[11,3.38],[4,2.6],[1,1.13],[19,3.67],[10,5.98]],"2021":[[1,0.63],[4,1.12],[4,0.87],[0,0.0],[3,0.91],[4,2.59],[1,1.11],[13,2.5],[5,2.91]],"2020":[[3,1.89],[13,3.65],[1,0.22],[2,1.25],[10,3.02],[4,2.59],[0,0.0],[16,3.07],[6,3.5]],"2019":[[30,18.93],[22,6.16],[14,3.02],[8,4.94],[18,5.43],[17,11.09],[8,9.03],[34,6.54],[13,7.45]],"2018":[[24,14.9],[31,0.0],[35,0.0],[13,0.0],[32,0.0],[17,0.0],[12,0.0],[37,0.0],[17,0.0]],"2017":[[22,13.69],[40,11.17],[45,9.61],[9,5.51],[22,6.59],[11,7.13],[13,14.63],[37,7.1],[12,6.76]],"2016":[[4,2.39],[26,7.12],[29,5.99],[8,4.78],[14,4.07],[11,6.91],[8,8.64],[19,3.59],[11,5.9]],"2015":[[9,5.38],[29,7.94],[24,4.95],[11,6.57],[13,3.77],[13,8.17],[10,10.8],[26,4.92],[8,4.29]],"2014":[[12,7.08],[18,4.88],[15,3.07],[5,2.96],[22,6.34],[10,6.2],[7,7.48],[11,2.07],[7,3.7]],"2013":[[11,6.49],[19,5.15],[12,2.45],[11,6.52],[15,4.32],[11,6.82],[5,5.34],[13,2.45],[3,1.59]],"2012":[[8,4.67],[12,3.2],[10,2.02],[25,14.64],[19,5.42],[17,10.38],[5,5.29],[28,5.24],[15,7.83]],"2011":[[11,6.37],[30,7.99],[8,1.61],[3,1.75],[26,7.37],[12,7.31],[9,9.45],[18,3.37],[6,3.1]],"2010":[[18,10.47],[32,8.54],[15,3.0],[8,4.64],[22,6.22],[10,6.09],[12,12.6],[36,6.75],[14,7.21]],"2009":[[7,4.08],[28,7.46],[21,4.2],[9,5.19],[32,9.02],[4,2.43],[12,12.62],[21,3.94],[17,8.69]],"2008":[[15,8.73],[26,6.96],[16,3.2],[12,6.92],[12,3.4],[4,2.44],[30,31.7],[13,2.46],[13,6.59]]},"14":{"2024":[[1,0.62],[4,1.11],[4,0.89],[2,1.27],[3,0.92],[2,1.28],[0,0.0],[1,0.19],[2,1.2]],"2023":[[0,0.0],[3,0.84],[0,0.0],[1,0.63],[1,0.31],[1,0.64],[0,0.0],[1,0.19],[0,0.0]],"2022":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.31],[1,0.65],[0,0.0],[0,0.0],[1,0.6]],"2021":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[1,0.58]],"2020":[[0,0.0],[2,0.56],[2,0.44],[0,0.0],[1,0.3],[1,0.65],[0,0.0],[2,0.38],[1,0.58]],"2019":[[0,0.0],[3,0.84],[2,0.43],[1,0.62],[5,1.51],[2,1.3],[0,0.0],[3,0.58],[2,1.15]],"2018":[[6,3.73],[2,0.0],[1,0.0],[1,0.0],[4,0.0],[1,0.0],[1,0.0],[6,0.0],[1,0.0]],"2017":[[1,0.62],[3,0.94],[0,0.0],[1,0.91],[4,1.2],[1,0.85],[0,0.0],[0,0.0],[1,0.56]],"2016":[[0,0.0],[4,1.1],[0,0.0],[0,0.0],[1,0.29],[1,0.63],[1,1.08],[4,0.76],[3,1.61]],"2015":[[0,0.0],[1,0.27],[1,0.21],[2,1.2],[1,0.29],[1,0.63],[0,0.0],[1,0.19],[1,0.54]],"2014":[[1,0.59],[1,0.27],[0,0.0],[2,1.19],[1,0.29],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2013":[[1,0.59],[3,0.81],[3,0.61],[0,0.0],[2,0.58],[0,0.0],[0,0.0],[4,0.75],[1,0.53]],"2012":[[0,0.0],[1,0.27],[4,0.81],[2,1.17],[2,0.57],[0,0.0],[0,0.0],[2,0.37],[0,0.0]],"2011":[[2,1.16],[4,1.06],[1,0.2],[4,2.33],[8,2.27],[1,0.61],[0,0.0],[3,0.56],[1,0.52]],"2010":[[1,0.58],[4,1.07],[2,0.4],[0,0.0],[5,1.41],[2,1.22],[1,1.05],[3,0.56],[2,1.03]],"2009":[[1,0.58],[6,1.6],[4,0.8],[2,1.15],[3,0.85],[0,0.0],[0,0.0],[4,0.75],[0,0.0]],"2008":[[1,0.58],[7,1.87],[8,1.6],[3,1.73],[4,1.13],[1,0.61],[1,1.06],[2,0.38],[1,0.51]]},"15":{"2024":[[0,0.0],[0,0.0],[0,0.0],[1,0.63],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.12],[1,0.19],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2015":[[0,0.0],[2,0.55],[3,0.62],[2,1.2],[1,0.29],[0,0.0],[1,1.08],[1,0.19],[0,0.0]],"2014":[[2,1.18],[4,1.08],[3,0.61],[0,0.0],[0,0.0],[0,0.0],[2,2.14],[2,0.38],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"16":{"2024":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[3,1.79],[2,0.55],[2,0.41],[1,0.6],[5,1.45],[2,1.26],[1,1.08],[6,1.13],[1,0.54]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"18":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"20":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.11],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"21":{"2024":[[4,2.49],[0,0.0],[0,0.0],[0,0.0],[3,0.92],[0,0.0],[3,3.33],[7,1.33],[1,0.6]],"2023":[[2,1.26],[0,0.0],[1,0.22],[2,1.27],[1,0.31],[0,0.0],[2,2.24],[3,0.58],[0,0.0]],"2022":[[5,3.16],[1,0.28],[1,0.22],[1,0.63],[0,0.0],[0,0.0],[3,3.39],[5,0.97],[0,0.0]],"2021":[[3,1.89],[2,0.56],[1,0.22],[1,0.63],[1,0.3],[1,0.65],[1,1.11],[4,0.77],[0,0.0]],"2020":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[9,1.73],[3,1.75]],"2019":[[3,1.89],[0,0.0],[2,0.43],[0,0.0],[0,0.0],[0,0.0],[2,2.26],[2,0.38],[0,0.0]],"2018":[[0,0.0],[0,0.0],[2,0.0],[0,0.0],[3,0.0],[0,0.0],[3,0.0],[8,0.0],[1,0.0]],"2017":[[5,3.11],[1,0.28],[1,0.21],[1,0.61],[4,1.2],[0,0.0],[8,9.0],[2,0.38],[1,0.56]],"2016":[[1,0.6],[2,0.55],[0,0.0],[1,0.6],[2,0.58],[1,0.63],[3,3.24],[5,0.95],[2,1.07]],"2015":[[2,1.2],[0,0.0],[3,0.62],[0,0.0],[3,0.87],[0,0.0],[3,3.24],[0,0.0],[0,0.0]],"2014":[[1,0.59],[1,0.27],[5,1.02],[0,0.0],[4,1.15],[0,0.0],[2,2.14],[1,0.19],[2,1.06]],"2013":[[3,1.77],[1,0.27],[4,0.82],[0,0.0],[3,0.86],[0,0.0],[1,1.07],[0,0.0],[1,0.53]],"2012":[[4,2.34],[0,0.0],[0,0.0],[2,1.17],[2,0.57],[1,0.61],[5,5.29],[1,0.19],[2,1.04]],"2011":[[2,1.16],[0,0.0],[0,0.0],[2,1.17],[0,0.0],[0,0.0],[2,2.1],[5,0.93],[2,1.03]],"2010":[[1,0.58],[1,0.27],[0,0.0],[1,0.58],[1,0.28],[1,0.61],[1,1.05],[1,0.19],[2,1.03]],"2009":[[1,0.58],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[2,1.21],[2,2.1],[0,0.0],[2,1.02]],"2008":[[2,1.16],[0,0.0],[2,0.4],[3,1.73],[2,0.57],[0,0.0],[5,5.28],[3,0.57],[1,0.51]]},"17":{"2024":[[7,4.36],[2,0.56],[5,1.12],[2,1.27],[0,0.0],[2,1.28],[3,3.33],[2,0.38],[0,0.0]],"2023":[[1,0.63],[6,1.68],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[1,1.12],[4,0.77],[0,0.0]],"2022":[[7,4.43],[2,0.56],[2,0.45],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[5,0.97],[0,0.0]],"2021":[[7,4.41],[1,0.28],[0,0.0],[1,0.63],[0,0.0],[2,1.3],[0,0.0],[2,0.38],[0,0.0]],"2020":[[3,1.89],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[4,0.77],[1,0.58]],"2019":[[5,3.15],[1,0.28],[2,0.43],[1,0.62],[0,0.0],[0,0.0],[5,5.64],[4,0.77],[0,0.0]],"2018":[[5,3.11],[0,0.0],[0,0.0],[3,0.0],[0,0.0],[0,0.0],[4,0.0],[2,0.0],[1,0.0]],"2017":[[3,1.87],[0,0.0],[5,1.07],[1,0.61],[0,0.0],[1,0.65],[0,0.0],[1,0.19],[2,1.13]],"2016":[[1,0.6],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[1,0.63],[0,0.0],[1,0.19],[0,0.0]],"2015":[[1,0.6],[1,0.27],[1,0.21],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2014":[[1,0.59],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[1,0.27],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2012":[[1,0.58],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.37],[0,0.0]],"2011":[[0,0.0],[0,0.0],[2,0.4],[1,0.58],[1,0.28],[0,0.0],[0,0.0],[8,1.5],[0,0.0]],"2010":[[0,0.0],[0,0.0],[1,0.2],[1,0.58],[1,0.28],[2,1.22],[1,1.05],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[1,0.2],[4,2.31],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[6,3.49],[1,0.27],[2,0.4],[2,1.15],[2,0.57],[0,0.0],[1,1.06],[5,0.95],[2,1.01]]},"22":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.74],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]]},"23":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[2,0.45],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.91],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[1,0.62],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]]},"24":{"2024":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2023":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.58],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.65],[0,0.0],[2,0.38],[0,0.0]],"2018":[[0,0.0],[1,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[1,0.61],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2016":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[3,0.87],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.62],[0,0.0],[0,0.0],[1,0.53]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.52]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[2,0.37],[0,0.0]],"2009":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2008":[[2,1.16],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[1,0.61],[0,0.0],[2,0.38],[1,0.51]]},"25":{"2024":[[9,5.61],[13,3.61],[21,4.69],[10,6.33],[12,3.66],[4,2.55],[9,9.99],[35,6.67],[6,3.61]],"2023":[[15,9.47],[19,5.32],[14,3.13],[14,8.87],[25,7.64],[2,1.29],[5,5.59],[30,5.76],[4,2.4]],"2022":[[6,3.79],[2,0.56],[5,1.12],[9,5.7],[30,9.21],[4,2.6],[4,4.53],[22,4.25],[6,3.59]],"2021":[[16,10.07],[11,3.09],[3,0.65],[1,0.63],[5,1.51],[0,0.0],[1,1.11],[22,4.22],[0,0.0]],"2020":[[4,2.52],[7,1.97],[11,2.4],[4,2.5],[9,2.72],[2,1.3],[0,0.0],[22,4.22],[1,0.58]],"2019":[[11,6.94],[14,3.92],[19,4.1],[11,6.79],[35,10.56],[9,5.87],[3,3.39],[29,5.58],[2,1.15]],"2018":[[7,4.36],[17,0.0],[19,0.0],[14,0.0],[33,0.0],[8,0.0],[3,0.0],[33,0.0],[4,0.0]],"2017":[[9,5.6],[17,4.75],[15,3.2],[8,4.9],[44,13.19],[6,3.89],[6,6.75],[27,5.18],[5,2.82]],"2016":[[6,3.59],[8,2.19],[17,3.51],[10,5.98],[33,9.58],[14,8.8],[5,5.4],[21,3.97],[5,2.68]],"2015":[[11,6.57],[10,2.74],[18,3.71],[14,8.37],[30,8.71],[38,23.88],[3,3.24],[45,8.51],[4,2.15]],"2014":[[10,5.9],[15,4.07],[13,2.66],[7,4.15],[34,9.79],[18,11.15],[5,5.34],[30,5.65],[5,2.64]],"2013":[[17,10.03],[16,4.34],[16,3.27],[10,5.93],[54,15.55],[17,10.53],[3,3.21],[31,5.84],[7,3.7]],"2012":[[7,4.09],[21,5.6],[10,2.02],[8,4.69],[49,13.98],[10,6.11],[5,5.29],[16,2.99],[4,2.09]],"2011":[[1,0.58],[14,3.73],[14,2.81],[6,3.5],[17,4.82],[10,6.09],[7,7.35],[20,3.74],[4,2.07]],"2010":[[14,8.14],[9,2.4],[10,2.0],[8,4.64],[10,2.83],[14,8.52],[3,3.15],[15,2.81],[5,2.57]],"2009":[[8,4.66],[19,5.06],[6,1.2],[1,0.58],[4,1.13],[8,4.85],[5,5.26],[19,3.57],[1,0.51]],"2008":[[11,6.4],[11,2.94],[4,0.8],[2,1.15],[5,1.41],[7,4.27],[10,10.57],[19,3.59],[1,0.51]]},"28":{"2024":[[1,0.62],[14,3.89],[5,1.12],[1,0.63],[2,0.61],[3,1.92],[4,4.44],[26,4.95],[0,0.0]],"2023":[[1,0.63],[2,0.56],[6,1.34],[0,0.0],[8,2.45],[0,0.0],[0,0.0],[4,0.77],[3,1.8]],"2022":[[0,0.0],[2,0.56],[1,0.22],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[5,0.97],[0,0.0]],"2021":[[1,0.63],[8,2.25],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2020":[[2,1.26],[4,1.12],[1,0.22],[2,1.25],[0,0.0],[1,0.65],[0,0.0],[0,0.0],[0,0.0]],"2019":[[4,2.52],[6,1.68],[2,0.43],[0,0.0],[3,0.91],[0,0.0],[1,1.13],[7,1.35],[3,1.72]],"2018":[[3,1.87],[30,0.0],[22,0.0],[5,0.0],[3,0.0],[14,0.0],[1,0.0],[18,0.0],[7,0.0]],"2017":[[8,4.98],[35,9.77],[17,3.63],[15,9.18],[20,6.0],[14,9.08],[3,3.37],[58,11.13],[9,5.07]],"2016":[[0,0.0],[2,0.55],[4,0.83],[0,0.0],[0,0.0],[4,2.51],[5,5.4],[4,0.76],[0,0.0]],"2015":[[0,0.0],[1,0.27],[5,1.03],[4,2.39],[5,1.45],[1,0.63],[0,0.0],[2,0.38],[1,0.54]],"2014":[[1,0.59],[14,3.8],[2,0.41],[2,1.19],[0,0.0],[1,0.62],[0,0.0],[3,0.56],[0,0.0]],"2013":[[1,0.59],[3,0.81],[0,0.0],[0,0.0],[10,2.88],[0,0.0],[0,0.0],[2,0.38],[1,0.53]],"2012":[[0,0.0],[3,0.8],[1,0.2],[0,0.0],[3,0.86],[1,0.61],[1,1.06],[1,0.19],[1,0.52]],"2011":[[3,1.74],[3,0.8],[2,0.4],[0,0.0],[3,0.85],[2,1.22],[0,0.0],[10,1.87],[1,0.52]],"2010":[[1,0.58],[4,1.07],[1,0.2],[4,2.32],[5,1.41],[3,1.83],[6,6.3],[3,0.56],[1,0.51]],"2009":[[9,5.24],[7,1.86],[7,1.4],[1,0.58],[20,5.64],[3,1.82],[3,3.15],[7,1.31],[2,1.02]],"2008":[[1,0.58],[20,5.35],[1,0.2],[1,0.58],[11,3.11],[1,0.61],[0,0.0],[5,0.95],[1,0.51]]},"29":{"2024":[[4,2.49],[8,2.22],[15,3.35],[4,2.53],[5,1.53],[0,0.0],[1,1.11],[25,4.76],[3,1.8]],"2023":[[9,5.68],[5,1.4],[10,2.23],[10,6.34],[2,0.61],[0,0.0],[1,1.12],[7,1.34],[3,1.8]],"2022":[[11,6.96],[3,0.84],[7,1.56],[2,1.27],[3,0.92],[4,2.6],[1,1.13],[6,1.16],[1,0.6]],"2021":[[10,6.29],[3,0.84],[7,1.52],[1,0.63],[5,1.51],[3,1.95],[1,1.11],[11,2.11],[3,1.75]],"2020":[[5,3.15],[3,0.84],[7,1.52],[1,0.63],[3,0.91],[0,0.0],[0,0.0],[8,1.54],[2,1.17]],"2019":[[12,7.57],[4,1.12],[13,2.8],[0,0.0],[5,1.51],[0,0.0],[0,0.0],[9,1.73],[2,1.15]],"2018":[[6,3.73],[9,0.0],[5,0.0],[1,0.0],[3,0.0],[0,0.0],[0,0.0],[3,0.0],[1,0.0]],"2017":[[7,4.36],[5,1.4],[3,0.64],[0,0.0],[0,0.0],[1,0.65],[0,0.0],[6,1.15],[1,0.56]],"2016":[[13,7.77],[8,2.19],[5,1.03],[4,2.39],[1,0.29],[1,0.63],[1,1.08],[8,1.51],[4,2.15]],"2015":[[11,6.57],[4,1.1],[7,1.44],[2,1.2],[2,0.58],[0,0.0],[0,0.0],[18,3.4],[5,2.68]],"2014":[[9,5.31],[10,2.73],[10,2.04],[1,0.59],[4,1.15],[0,0.0],[0,0.0],[12,2.26],[3,1.59]],"2013":[[7,4.13],[11,2.98],[10,2.04],[3,1.78],[6,1.73],[4,2.48],[1,1.07],[7,1.32],[5,2.64]],"2012":[[0,0.0],[5,1.33],[3,0.61],[3,1.76],[2,0.57],[1,0.61],[0,0.0],[19,3.56],[4,2.09]],"2011":[[3,1.74],[7,1.86],[2,0.4],[1,0.58],[5,1.42],[4,2.44],[1,1.05],[31,5.8],[4,2.07]],"2010":[[7,4.07],[8,2.13],[8,1.6],[1,0.58],[2,0.57],[9,5.48],[2,2.1],[33,6.18],[1,0.51]],"2009":[[7,4.08],[13,3.46],[7,1.4],[3,1.73],[4,1.13],[1,0.61],[3,3.15],[42,7.89],[8,4.09]],"2008":[[4,2.33],[5,1.34],[20,4.0],[7,4.04],[6,1.7],[5,3.05],[5,5.28],[45,8.51],[8,4.06]]},"30":{"2024":[[4,2.49],[4,1.11],[10,2.23],[4,2.53],[5,1.53],[4,2.55],[3,3.33],[22,4.19],[1,0.6]],"2023":[[4,2.53],[9,2.52],[9,2.01],[4,2.54],[10,3.06],[5,3.22],[2,2.24],[22,4.22],[0,0.0]],"2022":[[4,2.53],[5,1.41],[9,2.01],[2,1.27],[5,1.53],[9,5.85],[2,2.26],[10,1.93],[0,0.0]],"2021":[[3,1.89],[2,0.56],[7,1.52],[5,3.13],[3,0.91],[7,4.54],[0,0.0],[8,1.34],[2,1.17]],"2020":[[4,2.52],[4,1.12],[5,1.09],[1,0.63],[3,0.91],[3,1.95],[0,0.0],[17,3.26],[6,3.5]],"2019":[[8,5.05],[10,2.8],[11,2.37],[5,3.09],[9,2.72],[5,3.26],[0,0.0],[16,3.08],[9,5.16]],"2018":[[6,3.73],[7,0.0],[17,0.0],[8,0.0],[14,0.0],[16,0.0],[0,0.0],[17,0.0],[9,0.0]],"2017":[[1,0.62],[5,1.4],[6,1.28],[11,6.73],[6,1.8],[4,2.59],[1,1.12],[3,0.58],[4,2.25]],"2016":[[3,1.79],[3,0.82],[16,3.3],[5,2.99],[5,1.45],[3,1.89],[1,1.08],[15,2.84],[4,2.15]],"2015":[[6,3.59],[10,2.74],[10,2.06],[6,3.59],[7,2.03],[5,3.14],[4,4.32],[13,2.46],[5,2.68]],"2014":[[11,6.49],[24,6.51],[22,4.5],[2,1.19],[4,1.15],[2,1.24],[2,2.14],[12,2.26],[15,7.93]],"2013":[[5,2.95],[16,4.34],[13,2.66],[0,0.0],[4,1.15],[6,3.72],[2,2.14],[18,3.39],[12,6.35]],"2012":[[6,3.5],[10,2.67],[15,3.03],[7,4.1],[5,1.43],[2,1.22],[2,2.12],[20,3.74],[5,2.61]],"2011":[[2,1.16],[2,0.53],[2,0.4],[0,0.0],[3,0.85],[0,0.0],[1,1.05],[19,3.55],[2,1.03]],"2010":[[3,1.75],[1,0.27],[2,0.4],[0,0.0],[0,0.0],[1,0.61],[0,0.0],[23,4.31],[1,0.51]],"2009":[[3,1.75],[3,0.8],[4,0.8],[0,0.0],[4,1.13],[3,1.82],[1,1.05],[14,2.63],[0,0.0]],"2008":[[4,2.33],[18,4.82],[14,2.8],[2,1.15],[6,1.7],[4,2.44],[0,0.0],[39,7.37],[10,5.07]]},"32":{"2024":[[3,1.87],[1,0.28],[1,0.22],[0,0.0],[4,1.22],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2023":[[3,1.89],[3,0.84],[0,0.0],[0,0.0],[2,0.61],[1,0.64],[0,0.0],[3,0.58],[0,0.0]],"2022":[[4,2.53],[1,0.28],[2,0.45],[0,0.0],[3,0.92],[0,0.0],[0,0.0],[4,0.77],[2,1.2]],"2021":[[3,1.89],[4,1.12],[0,0.0],[1,0.63],[1,0.3],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2020":[[0,0.0],[1,0.28],[4,0.87],[2,1.25],[4,1.21],[3,1.95],[0,0.0],[3,0.58],[1,0.58]],"2019":[[5,3.15],[1,0.28],[2,0.43],[2,1.23],[2,0.6],[1,0.65],[1,1.13],[3,0.58],[4,2.29]],"2018":[[1,0.0],[1,0.0],[4,0.0],[4,0.0],[6,0.0],[2,0.0],[0,0.0],[1,0.0],[2,0.0]],"2017":[[5,3.11],[5,1.4],[3,0.64],[4,2.45],[7,2.1],[3,1.95],[2,2.25],[1,0.19],[3,1.69]],"2016":[[1,0.6],[3,0.82],[1,0.21],[10,5.98],[8,2.32],[2,1.26],[0,0.0],[3,0.57],[1,0.54]],"2015":[[4,2.39],[0,0.0],[3,0.62],[4,2.39],[7,2.03],[2,1.26],[2,2.16],[3,0.57],[4,2.15]],"2014":[[6,3.54],[8,2.17],[6,1.23],[2,1.19],[14,4.03],[3,1.86],[4,4.27],[6,1.13],[4,2.12]],"2013":[[4,2.36],[8,2.17],[1,0.2],[1,0.59],[19,5.47],[1,0.62],[2,2.14],[5,0.94],[3,1.59]],"2012":[[10,5.84],[4,1.07],[3,0.61],[4,2.34],[4,1.14],[5,3.05],[2,2.12],[2,0.37],[2,1.04]],"2011":[[5,2.9],[3,0.8],[2,0.4],[4,2.33],[15,4.25],[1,0.61],[1,1.05],[5,0.93],[0,0.0]],"2010":[[11,6.4],[4,1.07],[3,0.6],[4,2.32],[7,1.98],[1,0.61],[0,0.0],[4,0.75],[5,2.57]],"2009":[[12,6.99],[5,1.33],[1,0.2],[2,1.15],[5,1.41],[1,0.61],[1,1.05],[5,0.94],[6,3.07]],"2008":[[7,4.07],[2,0.54],[0,0.0],[10,5.77],[11,3.11],[1,0.61],[2,2.11],[4,0.76],[2,1.01]]},"35":{"2024":[[16,9.97],[52,14.45],[60,13.4],[11,6.96],[60,18.32],[51,32.56],[18,19.98],[103,19.61],[16,9.62]],"2023":[[10,6.31],[59,16.52],[36,8.05],[15,9.5],[65,19.87],[26,16.75],[9,10.06],[71,13.63],[10,6.01]],"2022":[[15,9.49],[30,8.45],[28,6.25],[9,5.7],[71,21.79],[14,9.1],[19,21.5],[57,11.0],[15,8.97]],"2021":[[10,6.29],[18,5.06],[17,3.7],[12,7.5],[24,7.25],[7,4.54],[7,7.79],[46,8.83],[3,1.75]],"2020":[[2,1.26],[16,4.5],[11,2.4],[8,5.0],[12,3.62],[5,3.24],[1,1.11],[28,5.38],[3,1.75]],"2019":[[10,6.31],[20,5.6],[15,3.23],[5,3.09],[30,9.05],[9,5.87],[6,6.77],[25,4.81],[10,5.73]],"2018":[[0,1.24],[0,0.0],[5,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.0],[0,0.0]],"2017":[[6,3.73],[14,3.91],[9,1.92],[3,1.84],[29,8.69],[4,2.59],[2,2.25],[13,2.49],[4,2.25]],"2016":[[6,3.59],[13,3.56],[9,1.86],[8,4.78],[21,6.1],[10,6.28],[2,2.16],[19,3.59],[7,3.76]],"2015":[[3,1.79],[12,3.29],[14,2.89],[5,2.99],[15,4.36],[2,1.26],[4,4.32],[18,3.4],[2,1.07]],"2014":[[2,1.18],[7,1.9],[11,2.25],[4,2.37],[11,3.17],[6,3.72],[2,2.14],[13,2.45],[7,3.7]],"2013":[[1,0.59],[3,0.81],[8,1.64],[4,2.37],[22,6.34],[5,3.1],[4,4.27],[7,1.32],[4,2.12]],"2012":[[7,4.09],[3,0.8],[4,0.81],[6,3.51],[7,2.0],[6,3.67],[1,1.06],[12,2.25],[6,3.13]],"2011":[[1,0.58],[7,1.86],[5,1.0],[5,2.91],[5,1.42],[5,3.05],[3,3.15],[7,1.31],[2,1.03]],"2010":[[6,3.49],[13,3.47],[4,0.8],[6,3.48],[3,0.85],[6,3.65],[2,2.1],[4,0.75],[3,1.54]],"2009":[[5,0.0],[5,0.27],[15,0.0],[11,0.0],[5,0.0],[2,0.0],[0,1.05],[4,0.0],[1,0.51]],"2008":[[3,1.75],[19,5.08],[12,2.4],[4,2.31],[4,1.13],[0,0.0],[3,3.17],[10,1.89],[6,3.04]]},"36":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[2,0.62],[11,0.0],[4,0.0],[1,0.0],[20,0.0],[10,0.0],[0,0.0],[30,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"37":{"2024":[[1,0.62],[2,0.56],[3,0.67],[0,0.0],[1,0.31],[0,0.0],[2,2.22],[2,0.38],[2,1.2]]},"33":{"2024":[[23,14.33],[65,18.07],[28,6.25],[25,15.82],[65,19.84],[32,20.43],[23,25.53],[117,22.28],[9,5.41]],"2023":[[18,11.36],[57,15.96],[14,3.13],[18,11.41],[62,18.95],[11,7.08],[38,42.47],[82,15.74],[9,5.41]],"2022":[[14,8.85],[30,8.45],[20,4.46],[9,5.7],[53,16.26],[11,7.15],[16,18.1],[82,15.83],[5,2.99]],"2021":[[18,11.33],[26,7.31],[12,2.61],[7,4.38],[49,14.8],[5,3.24],[3,3.34],[80,15.36],[3,1.75]],"2020":[[10,6.29],[13,3.65],[8,1.74],[4,2.5],[26,7.85],[7,4.54],[1,1.11],[32,6.15],[8,4.66]],"2019":[[14,8.83],[6,1.68],[9,1.94],[3,1.85],[29,8.75],[21,13.69],[2,2.26],[35,6.73],[3,1.72]],"2018":[[3,0.0],[17,0.0],[17,0.0],[10,0.0],[21,0.0],[8,0.0],[2,0.0],[24,0.0],[7,0.0]],"2017":[[1,0.62],[7,1.95],[2,0.43],[1,0.61],[8,2.4],[4,2.59],[3,3.37],[4,0.77],[1,0.56]],"2016":[[1,0.6],[3,0.82],[2,0.41],[1,0.6],[5,1.45],[13,8.17],[0,0.0],[3,0.57],[0,0.0]],"2015":[[0,0.0],[3,0.82],[3,0.62],[0,0.0],[5,1.45],[1,0.63],[1,1.08],[5,0.95],[0,0.0]],"2014":[[0,0.0],[5,1.36],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.53]],"2013":[[0,0.0],[0,0.0],[0,0.0],[1,0.59],[0,0.0],[1,0.62],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[3,0.8],[0,0.0],[0,0.0],[0,0.0],[2,1.22],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[2,1.16],[1,0.27],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.37],[0,0.0]],"2009":[[0,2.91],[1,1.33],[0,3.0],[0,6.35],[0,1.41],[0,1.21],[1,0.0],[0,0.75],[1,0.51]],"2008":[[1,0.58],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"41":{"2024":[[2,1.25],[14,3.89],[18,4.02],[3,1.9],[12,3.66],[0,0.0],[5,5.55],[23,4.38],[10,6.01]],"2023":[[1,0.63],[14,3.92],[17,3.8],[1,0.63],[8,2.45],[3,1.93],[9,10.06],[21,4.03],[7,4.21]],"2022":[[3,1.9],[8,2.25],[8,1.79],[0,0.0],[7,2.15],[4,2.6],[6,6.79],[23,4.44],[4,2.39]],"2021":[[2,1.26],[4,1.12],[6,1.31],[1,0.63],[5,1.51],[2,1.3],[2,2.22],[14,2.69],[10,5.83]],"2020":[[1,0.63],[5,1.41],[10,2.18],[1,0.63],[2,0.6],[0,0.0],[1,1.11],[9,1.73],[4,2.33]],"2019":[[2,1.26],[6,1.68],[13,2.8],[1,0.62],[5,1.51],[3,1.96],[5,5.64],[10,1.92],[14,8.02]],"2018":[[0,0.0],[10,0.0],[11,0.0],[1,0.0],[9,0.0],[1,0.0],[4,0.0],[15,0.0],[3,0.0]],"2017":[[1,0.62],[14,3.91],[12,2.56],[1,0.61],[4,1.2],[3,1.95],[2,2.25],[7,1.34],[6,3.38]],"2016":[[1,0.6],[3,0.82],[9,1.86],[0,0.0],[1,0.29],[2,1.26],[2,2.16],[3,0.57],[2,1.07]],"2015":[[6,3.59],[7,1.92],[15,3.1],[0,0.0],[17,4.94],[4,2.51],[3,3.24],[6,1.13],[1,0.54]],"2014":[[2,1.18],[5,1.36],[14,2.86],[2,1.19],[1,0.29],[1,0.62],[2,2.14],[2,0.38],[1,0.53]],"2013":[[1,0.59],[7,1.9],[8,1.64],[0,0.0],[2,0.58],[1,0.62],[0,0.0],[6,1.13],[4,2.12]],"2012":[[1,0.58],[0,0.0],[6,1.21],[0,0.0],[1,0.29],[1,0.61],[2,2.12],[6,1.12],[3,1.57]],"2011":[[1,0.58],[1,0.27],[3,0.6],[2,1.17],[2,0.57],[0,0.0],[2,2.1],[5,0.93],[0,0.0]],"2010":[[1,0.58],[5,1.33],[11,2.2],[0,0.0],[5,1.41],[1,0.61],[3,3.15],[3,0.56],[8,4.12]],"2009":[[2,1.16],[5,1.33],[11,2.2],[1,0.58],[10,2.82],[0,0.0],[4,4.21],[7,1.31],[6,3.07]],"2008":[[1,0.58],[15,4.01],[3,0.6],[3,1.73],[3,0.85],[2,1.22],[3,3.17],[2,0.38],[2,1.01]]},"42":{"2024":[[1,0.62],[0,0.0],[1,0.22],[0,0.0],[1,0.31],[1,0.64],[0,0.0],[0,0.0],[0,0.0]],"2023":[[1,0.63],[0,0.0],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[1,1.12],[1,0.19],[0,0.0]],"2022":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[0,0.0],[1,0.6]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[2,1.3],[0,0.0],[0,0.0],[0,0.0]],"2019":[[1,0.63],[0,0.0],[2,0.43],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[1,0.0],[0,0.0],[1,0.0],[0,0.0],[1,0.0],[0,0.0],[0,0.0],[1,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[2,0.43],[1,0.61],[0,0.0],[3,1.95],[0,0.0],[0,0.0],[0,0.0]],"2016":[[1,0.6],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[1,0.21],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[1,0.59],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.07],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[1,0.52]],"2011":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[1,0.28],[0,0.0],[1,1.05],[0,0.0],[0,0.0]],"2009":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[1,0.61],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"43":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.62],[1,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2010":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.51]],"2009":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]]},"44":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[3,0.57],[0,0.0]],"2023":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[2,0.44],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[1,0.21],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"45":{"2024":[[3,1.87],[5,1.39],[10,2.23],[3,1.9],[6,1.83],[2,1.28],[2,2.22],[4,0.76],[1,0.6]],"2023":[[0,0.0],[4,1.12],[6,1.34],[3,1.9],[5,1.53],[3,1.93],[1,1.12],[4,0.77],[4,2.4]],"2022":[[2,1.26],[6,1.69],[5,1.12],[4,2.53],[1,0.31],[2,1.3],[3,3.39],[8,1.54],[1,0.6]],"2021":[[3,1.89],[2,0.56],[4,0.87],[1,0.63],[3,0.91],[2,1.3],[0,0.0],[7,1.34],[0,0.0]],"2020":[[0,0.0],[4,1.12],[3,0.65],[0,0.0],[4,1.21],[3,1.95],[0,0.0],[2,0.38],[2,1.17]],"2019":[[3,1.89],[10,2.8],[3,0.65],[6,3.7],[8,2.41],[6,3.91],[0,0.0],[13,2.5],[1,0.57]],"2018":[[4,0.0],[3,0.0],[4,0.0],[0,0.0],[9,0.0],[5,0.0],[1,0.0],[10,0.0],[1,0.0]],"2017":[[1,0.62],[3,0.84],[2,0.43],[3,1.84],[3,0.9],[6,3.89],[0,0.0],[5,0.96],[2,1.13]],"2016":[[1,0.6],[7,1.92],[6,1.24],[3,1.79],[3,0.87],[5,3.14],[1,1.08],[10,1.89],[2,1.07]],"2015":[[1,0.6],[3,0.82],[9,1.86],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[1,0.54]],"2014":[[1,0.59],[3,0.81],[2,0.41],[2,1.19],[5,1.44],[1,0.62],[1,1.07],[0,0.0],[2,1.06]],"2013":[[1,0.59],[3,0.81],[0,0.0],[5,2.96],[7,2.02],[2,1.24],[0,0.0],[10,1.88],[1,0.53]],"2012":[[0,0.0],[0,0.0],[3,0.61],[1,0.59],[3,0.86],[2,1.22],[0,0.0],[2,0.37],[0,0.0]],"2011":[[0,0.0],[1,0.27],[1,0.2],[0,0.0],[1,0.28],[2,1.22],[1,1.05],[5,0.93],[2,1.03]],"2010":[[4,2.33],[4,1.07],[1,0.2],[1,0.58],[2,0.57],[0,0.0],[0,0.0],[3,0.56],[1,0.51]],"2009":[[0,0.0],[2,0.53],[2,0.4],[5,2.89],[0,0.0],[1,0.61],[2,2.1],[0,0.0],[1,0.51]],"2008":[[0,0.0],[0,0.0],[0,0.0],[3,1.73],[0,0.0],[2,1.22],[0,0.0],[1,0.19],[0,0.0]]},"47":{"2024":[[2,1.25],[20,5.56],[2,0.45],[3,1.9],[8,2.44],[0,0.0],[2,2.22],[14,2.67],[2,1.2]],"2023":[[6,3.79],[18,5.04],[3,0.67],[2,1.27],[8,2.45],[0,0.0],[1,1.12],[7,1.34],[3,1.8]],"2022":[[3,1.9],[2,0.56],[2,0.45],[3,1.9],[7,2.15],[0,0.0],[0,0.0],[8,1.54],[2,1.2]],"2021":[[2,1.26],[3,0.84],[2,0.44],[0,0.0],[4,1.21],[0,0.0],[1,1.11],[6,1.15],[1,0.58]],"2020":[[0,0.0],[2,0.56],[3,0.65],[0,0.0],[3,0.91],[0,0.0],[0,0.0],[3,0.58],[1,0.58]],"2019":[[5,3.15],[15,4.2],[4,0.86],[2,1.23],[21,6.34],[1,0.65],[1,1.13],[12,2.31],[6,3.44]],"2018":[[3,2.49],[6,0.0],[4,0.0],[1,0.0],[13,0.0],[1,0.0],[2,0.0],[16,0.0],[3,0.0]],"2017":[[2,1.24],[5,1.4],[9,1.92],[2,1.22],[17,5.1],[2,1.3],[3,3.37],[17,3.26],[1,0.56]],"2016":[[2,1.2],[18,4.93],[8,1.65],[4,2.39],[18,5.23],[6,3.77],[2,2.16],[17,3.22],[7,3.76]],"2015":[[9,5.38],[7,1.92],[9,1.86],[4,2.39],[16,4.65],[2,1.26],[2,2.16],[12,2.27],[8,4.29]],"2014":[[1,0.59],[9,2.44],[7,1.43],[2,1.19],[6,1.73],[2,1.24],[1,1.07],[6,1.13],[1,0.53]],"2013":[[5,2.95],[33,8.95],[9,1.84],[14,8.3],[10,2.88],[2,1.24],[0,0.0],[9,1.69],[5,2.64]],"2012":[[2,1.17],[19,5.07],[8,1.62],[3,1.76],[9,2.57],[3,1.83],[4,4.23],[40,7.49],[5,2.61]],"2011":[[3,1.74],[10,2.66],[6,1.21],[1,0.58],[15,4.25],[0,0.0],[0,0.0],[8,1.5],[3,1.55]],"2010":[[2,1.16],[5,1.33],[4,0.8],[2,1.16],[5,1.41],[2,1.22],[0,0.0],[4,0.75],[6,3.09]],"2009":[[10,5.82],[11,2.93],[2,0.4],[3,1.73],[3,0.85],[0,0.0],[1,1.05],[10,1.88],[2,1.02]],"2008":[[17,9.89],[14,3.75],[7,1.4],[7,4.04],[2,0.57],[1,0.61],[0,0.0],[14,2.65],[1,0.51]]},"46":{"2024":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[1,0.19],[2,1.2]]},"48":{"2024":[[5,3.12],[22,6.12],[11,2.46],[4,2.53],[9,2.75],[8,5.11],[5,5.55],[25,4.76],[2,1.2]],"2023":[[6,3.79],[21,5.88],[23,5.14],[3,1.9],[4,0.92],[7,4.51],[4,4.47],[19,3.65],[4,2.4]],"2022":[[6,3.79],[21,5.91],[18,4.02],[6,3.8],[10,3.07],[7,4.55],[3,3.39],[35,6.76],[5,2.99]],"2021":[[4,2.52],[30,8.43],[30,6.53],[2,1.25],[7,2.11],[6,3.89],[4,4.45],[19,3.65],[6,3.5]],"2020":[[1,0.63],[10,2.81],[26,5.66],[8,5.0],[9,2.72],[7,4.54],[2,2.22],[21,4.03],[5,2.91]],"2019":[[4,2.52],[19,5.32],[12,2.59],[6,3.7],[11,3.32],[8,5.22],[5,5.64],[32,6.16],[6,3.44]],"2018":[[9,1.87],[23,0.0],[12,0.0],[5,0.0],[20,0.0],[2,0.0],[9,0.0],[32,0.0],[4,0.0]],"2017":[[2,1.24],[22,7.26],[13,2.78],[5,3.06],[16,4.8],[5,3.24],[3,3.37],[23,4.61],[3,1.69]],"2016":[[7,4.18],[10,2.74],[17,3.51],[2,1.2],[15,4.36],[2,1.26],[6,6.48],[27,5.11],[6,3.22]],"2015":[[3,1.79],[13,3.56],[15,3.1],[7,4.18],[13,3.77],[3,1.89],[4,4.32],[20,3.78],[2,1.07]],"2014":[[4,2.36],[20,5.42],[15,3.07],[8,4.74],[17,4.9],[4,2.48],[5,5.34],[19,3.58],[10,5.29]],"2013":[[4,2.36],[20,5.42],[16,3.27],[9,5.33],[21,6.05],[2,1.24],[5,5.34],[39,7.34],[4,2.12]],"2012":[[7,4.09],[17,4.53],[25,5.06],[5,2.93],[20,5.71],[11,6.72],[3,3.17],[46,8.61],[6,3.13]],"2011":[[4,2.32],[28,7.45],[18,3.62],[11,6.41],[32,9.07],[5,3.04],[4,4.2],[45,8.41],[8,4.14]],"2010":[[8,4.65],[14,3.74],[24,4.81],[8,4.64],[25,7.07],[6,3.65],[2,2.1],[39,7.31],[6,3.09]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"52":{"2024":[[3,1.87],[3,0.83],[3,0.67],[0,0.0],[7,2.14],[2,1.28],[4,4.44],[2,0.38],[1,0.6]],"2023":[[1,0.63],[3,0.84],[1,0.22],[0,0.0],[2,0.61],[1,0.64],[1,0.0],[3,0.58],[0,0.0]],"2022":[[1,0.63],[1,0.28],[0,0.0],[1,0.63],[2,0.61],[0,0.0],[1,1.13],[2,0.39],[1,0.6]],"2021":[[2,1.26],[0,0.0],[0,0.0],[2,1.25],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[1,0.63],[0,0.0],[1,0.22],[0,0.0],[3,0.91],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2019":[[0,0.0],[2,0.56],[1,0.22],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2018":[[0,0.0],[3,0.0],[1,0.0],[1,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2016":[[2,1.2],[1,0.27],[1,0.21],[0,0.0],[1,0.29],[1,0.63],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[4,1.1],[1,0.21],[0,0.0],[0,0.0],[1,0.63],[0,0.0],[1,0.19],[0,0.0]],"2014":[[0,0.0],[2,0.54],[5,1.02],[0,0.0],[2,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[4,0.82],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2012":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[1,0.29],[1,0.61],[0,0.0],[4,0.75],[0,0.0]],"2011":[[0,0.0],[1,0.27],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[1,0.52]],"2010":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[2,2.1],[2,0.37],[0,0.0]],"2009":[[0,0.0],[0,0.0],[1,0.2],[2,1.15],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[6,3.46],[0,0.0],[4,2.44],[0,0.0],[2,0.38],[2,1.01]]},"50":{"2024":[[12,7.48],[22,6.12],[20,4.47],[8,5.06],[26,7.94],[9,5.75],[6,6.66],[43,8.19],[3,1.8]],"2023":[[10,6.31],[10,2.8],[5,1.12],[6,3.8],[11,3.36],[0,0.0],[9,10.06],[5,0.96],[2,1.2]]},"51":{"2024":[[1,0.62],[2,0.56],[0,0.0],[0,0.0],[2,0.61],[0,0.0],[0,0.0],[3,0.57],[0,0.0]],"2023":[[2,1.26],[2,0.56],[2,0.45],[2,1.27],[0,0.0],[0,0.0],[1,1.12],[4,0.77],[2,1.2]],"2022":[[3,1.9],[1,0.28],[2,0.45],[2,1.27],[1,0.31],[0,0.0],[0,0.0],[2,0.39],[1,0.6]],"2021":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[3,0.91],[0,0.0],[0,0.0],[2,0.38],[1,0.58]],"2020":[[1,0.63],[1,0.28],[0,0.0],[2,1.25],[1,0.3],[0,0.0],[1,1.11],[1,0.19],[0,0.0]],"2019":[[2,1.26],[0,0.0],[0,0.0],[0,0.0],[3,0.91],[0,0.0],[0,0.0],[6,1.15],[0,0.0]],"2018":[[0,0.62],[0,0.0],[0,0.0],[0,0.0],[1,0.0],[1,0.0],[1,0.0],[4,0.0],[1,0.0]],"2017":[[0,0.0],[0,0.0],[4,0.85],[0,0.0],[0,0.0],[2,1.3],[2,2.25],[1,0.19],[0,0.0]],"2016":[[1,0.6],[1,0.27],[0,0.0],[3,1.79],[2,0.58],[0,0.0],[2,2.16],[3,0.57],[0,0.0]],"2015":[[1,0.6],[1,0.27],[0,0.0],[0,0.0],[3,0.87],[2,1.26],[0,0.0],[3,0.57],[0,0.0]],"2014":[[0,0.0],[3,0.81],[4,0.82],[1,0.59],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2013":[[2,1.18],[0,0.0],[0,0.0],[1,0.59],[0,0.0],[0,0.0],[0,0.0],[6,1.13],[0,0.0]],"2012":[[0,0.0],[1,0.27],[1,0.2],[1,0.59],[1,0.29],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2011":[[0,0.0],[4,1.06],[1,0.2],[3,1.75],[3,0.85],[0,0.0],[0,0.0],[5,0.93],[0,0.0]],"2010":[[0,0.0],[1,0.27],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.56],[1,0.51]],"2009":[[0,0.0],[3,0.8],[1,0.2],[1,0.58],[0,0.0],[1,0.61],[0,0.0],[6,1.13],[0,0.0]],"2008":[[3,1.75],[4,1.07],[1,0.2],[4,2.31],[1,0.28],[1,0.61],[1,1.06],[9,1.7],[1,0.51]]},"53":{"2024":[[0,0.0],[7,1.95],[1,0.22],[0,0.0],[2,0.61],[0,0.0],[0,0.0],[3,0.57],[1,0.6]],"2023":[[1,0.63],[5,1.4],[2,0.45],[2,1.27],[1,0.31],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[2,1.26],[8,2.25],[2,0.45],[1,0.63],[3,0.92],[0,0.0],[2,2.26],[1,0.19],[1,0.6]],"2021":[[0,0.0],[5,1.41],[2,0.44],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2020":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.3],[1,0.65],[0,0.0],[1,0.19],[0,0.0]],"2019":[[2,1.26],[6,1.68],[1,0.22],[0,0.0],[3,0.91],[1,0.65],[1,1.13],[1,0.19],[0,0.0]],"2018":[[0,0.0],[3,0.0],[0,0.0],[1,0.0],[2,0.0],[1,0.0],[0,0.0],[2,0.0],[0,0.0]],"2017":[[2,1.24],[3,0.84],[0,0.0],[2,1.22],[3,0.9],[1,0.65],[2,2.25],[5,0.96],[0,0.0]],"2016":[[2,1.2],[3,0.82],[0,0.0],[1,0.6],[3,0.87],[1,0.63],[1,1.08],[2,0.38],[0,0.0]],"2015":[[2,1.2],[5,1.37],[1,0.21],[0,0.0],[3,0.87],[5,3.14],[1,1.08],[6,1.13],[1,0.54]],"2014":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[4,1.15],[4,2.48],[1,1.07],[1,0.19],[0,0.0]],"2013":[[1,0.59],[2,0.54],[2,0.41],[1,0.59],[0,0.0],[3,1.86],[5,5.34],[3,0.56],[0,0.0]],"2012":[[0,0.0],[3,0.8],[0,0.0],[1,0.59],[1,0.29],[0,0.0],[1,1.06],[1,0.19],[1,0.52]],"2011":[[0,0.0],[2,0.53],[1,0.2],[0,0.0],[2,0.57],[0,0.0],[2,2.1],[0,0.0],[0,0.0]],"2010":[[0,0.0],[1,0.27],[4,0.8],[1,0.58],[1,0.28],[2,1.22],[0,0.0],[2,0.37],[0,0.0]],"2009":[[1,0.58],[2,0.53],[2,0.4],[0,0.0],[7,1.97],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2008":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"55":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[2,0.56],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,32.4],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.6],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2016":[[0,0.0],[2,0.55],[1,0.21],[0,0.0],[1,0.29],[1,0.63],[0,0.0],[1,0.19],[0,0.0]],"2015":[[0,0.0],[0,0.0],[1,0.21],[0,0.0],[1,0.29],[0,0.0],[1,1.08],[1,0.19],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"54":{"2024":[[4,2.49],[34,9.45],[35,7.82],[42,26.57],[16,4.88],[15,9.58],[7,7.77],[90,17.14],[1,0.6]],"2023":[[4,2.53],[44,12.32],[36,8.05],[19,12.04],[47,14.37],[21,13.53],[7,7.62],[52,9.98],[5,3.01]],"2022":[[12,7.59],[52,14.65],[27,6.02],[26,16.45],[44,13.5],[12,7.8],[20,22.63],[50,9.65],[9,5.38]],"2021":[[6,3.78],[23,6.47],[31,6.75],[20,12.51],[19,5.74],[16,10.38],[6,6.67],[40,7.68],[9,5.24]],"2020":[[20,12.59],[277,77.88],[61,13.28],[184,115.07],[53,16.01],[92,59.66],[278,309.26],[265,50.89],[8,4.66]],"2019":[[48,30.28],[136,38.09],[91,19.62],[145,89.49],[508,153.26],[255,166.29],[87,98.19],[123,23.66],[20,11.46]],"2018":[[52,0.0],[114,0.0],[85,0.0],[55,0.0],[113,0.0],[30,0.0],[43,0.0],[149,0.0],[3,0.0]],"2017":[[20,12.45],[31,8.66],[114,24.34],[46,28.15],[52,15.59],[26,16.86],[7,7.87],[91,17.46],[12,6.76]],"2016":[[107,63.94],[56,15.33],[83,17.13],[57,34.07],[52,15.1],[17,10.68],[6,6.48],[67,12.67],[5,2.68]],"2015":[[7,4.18],[29,7.94],[56,11.56],[48,28.69],[35,10.16],[16,10.05],[7,7.56],[57,10.78],[1,0.54]],"2014":[[22,12.98],[37,10.04],[53,10.83],[46,27.26],[37,10.66],[9,5.58],[4,4.27],[86,16.19],[19,10.05]],"2013":[[130,76.72],[98,26.58],[145,29.64],[365,216.3],[294,84.67],[87,53.91],[13,13.89],[1501,282.6],[106,56.07]],"2012":[[13,7.59],[73,19.47],[196,39.64],[284,166.36],[91,25.96],[44,26.88],[7,7.41],[360,67.38],[80,41.75]],"2011":[[15,8.69],[49,13.04],[25,5.02],[31,18.06],[188,53.26],[18,10.96],[5,5.25],[66,12.34],[22,11.38]],"2010":[[9,5.24],[27,7.2],[24,4.81],[14,8.12],[43,12.16],[52,31.66],[2,2.1],[45,8.43],[23,11.84]],"2009":[[16,9.32],[31,8.25],[27,5.4],[6,3.46],[21,5.92],[9,5.46],[7,7.36],[54,10.14],[24,12.27]],"2008":[[13,7.57],[33,8.83],[19,3.8],[16,9.22],[29,8.21],[14,8.54],[16,16.91],[47,8.88],[30,15.21]]},"56":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"57":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"58":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"59":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"60":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"62":{"2024":[[34,21.19],[63,17.51],[59,13.18],[43,27.2],[101,30.83],[55,35.12],[42,46.63],[125,23.8],[48,28.87]],"2023":[[63,39.77],[103,28.84],[60,13.41],[87,55.15],[90,27.51],[21,13.53],[41,45.82],[167,32.05],[75,45.08]],"2022":[[46,29.09],[74,20.84],[59,13.16],[41,25.95],[113,34.67],[32,20.81],[23,26.02],[158,30.5],[44,26.31]],"2021":[[34,21.4],[63,17.71],[19,4.14],[27,16.88],[82,24.77],[21,13.62],[49,54.51],[103,19.78],[29,16.89]],"2020":[[29,18.25],[55,15.46],[26,5.66],[25,15.63],[63,19.03],[42,27.24],[12,13.35],[119,22.85],[30,17.48]],"2019":[[88,55.52],[62,17.36],[38,8.19],[53,32.71],[107,32.28],[38,24.78],[42,47.4],[177,34.05],[28,16.04]],"2018":[[108,0.0],[80,0.0],[38,0.0],[76,0.0],[114,0.0],[102,0.0],[59,0.0],[167,0.0],[46,0.0]],"2017":[[90,56.0],[138,38.53],[75,16.01],[49,29.99],[158,47.36],[125,81.07],[74,83.24],[284,54.5],[57,32.13]],"2016":[[107,63.94],[141,38.6],[121,24.97],[75,44.83],[171,49.7],[128,80.44],[77,83.13],[414,78.31],[117,62.77]],"2015":[[60,35.86],[90,24.64],[42,8.67],[61,36.46],[131,38.04],[113,71.01],[100,107.96],[249,47.1],[39,20.92]],"2014":[[46,27.15],[85,23.05],[35,7.15],[49,29.04],[81,23.33],[86,53.29],[69,73.74],[226,42.55],[54,28.57]],"2013":[[53,31.28],[50,13.56],[29,5.93],[50,29.63],[101,29.09],[145,89.85],[57,60.91],[172,32.38],[37,19.57]],"2012":[[41,23.94],[69,18.4],[39,7.89],[32,18.74],[75,21.39],[109,66.58],[59,62.42],[156,29.2],[31,16.18]],"2011":[[34,19.69],[73,19.43],[36,7.23],[20,11.65],[48,13.6],[61,37.16],[33,34.66],[119,22.25],[41,21.2]],"2010":[[29,16.87],[50,13.34],[35,7.01],[33,19.13],[20,5.66],[77,46.87],[40,41.99],[95,17.8],[29,14.93]],"2009":[[37,21.55],[47,12.51],[37,7.4],[38,21.93],[25,7.05],[77,46.71],[52,54.68],[58,10.89],[19,9.71]],"2008":[[24,13.97],[79,21.14],[149,29.79],[38,21.91],[32,9.05],[90,54.91],[35,36.98],[54,10.21],[24,12.17]]},"63":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[5,0.95],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,67.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[4,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[6,1.15],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[1,0.58],[1,0.27],[1,0.2],[0,0.0],[1,0.29],[1,0.61],[0,0.0],[0,0.0],[0,0.0]],"2011":[[7,4.05],[0,0.0],[0,0.0],[0,0.0],[1,0.28],[1,0.61],[0,0.0],[0,0.0],[0,0.0]],"2010":[[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,1.83],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.61],[0,0.0],[1,0.19],[0,0.0]]},"64":{"2024":[[1,0.62],[4,1.11],[16,3.57],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[12,2.29],[4,2.41]],"2023":[[4,2.53],[4,1.12],[10,2.23],[1,0.63],[0,0.0],[0,0.0],[0,0.0],[7,1.34],[2,1.2]],"2022":[[1,0.63],[0,0.0],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[3,0.65],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2019":[[0,0.0],[5,1.4],[1,0.22],[0,0.0],[1,0.3],[1,0.65],[1,1.13],[5,0.96],[0,0.0]],"2018":[[0,0.0],[0,0.0],[6,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.0],[8,0.0],[2,0.0]],"2017":[[0,0.0],[1,0.28],[3,0.64],[0,0.0],[0,0.0],[0,0.0],[1,1.12],[4,0.77],[1,0.56]],"2016":[[0,0.0],[0,0.0],[2,0.41],[0,0.0],[2,0.58],[2,1.26],[5,5.4],[3,0.57],[1,0.54]],"2015":[[0,0.0],[0,0.0],[6,1.24],[12,7.17],[0,0.0],[2,1.26],[0,0.0],[1,0.19],[1,0.54]],"2014":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[4,4.27],[11,2.07],[1,0.53]],"2013":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[3,0.56],[2,1.06]],"2012":[[2,1.17],[3,0.8],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.06],[4,0.75],[0,0.0]],"2011":[[1,0.58],[3,0.8],[0,0.0],[1,0.58],[1,0.28],[0,0.0],[1,1.05],[2,0.37],[1,0.52]],"2010":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[1,0.51]],"2008":[[0,0.0],[3,0.8],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[6,1.13],[0,0.0]]},"65":{"2024":[[22,13.71],[34,9.45],[68,15.19],[12,7.59],[26,7.94],[23,14.69],[7,7.77],[100,19.04],[21,12.63]],"2023":[[9,5.68],[46,12.88],[53,11.4],[12,7.61],[23,7.03],[17,10.95],[15,16.76],[75,14.39],[12,7.21]],"2022":[[10,6.32],[34,9.58],[50,11.16],[17,10.76],[31,9.51],[15,9.75],[5,5.66],[62,11.97],[13,7.77]],"2021":[[4,2.52],[29,8.15],[33,7.19],[6,3.75],[21,6.64],[18,11.67],[2,2.22],[61,11.71],[11,6.41]],"2020":[[5,3.15],[18,5.06],[16,3.48],[2,1.25],[14,4.23],[11,7.13],[0,0.0],[53,10.18],[8,4.66]],"2019":[[8,5.05],[27,7.56],[29,6.25],[9,5.55],[27,8.15],[12,7.83],[1,1.13],[77,14.81],[14,8.02]],"2018":[[5,0.0],[16,0.0],[21,0.0],[4,0.0],[17,0.0],[4,0.0],[3,0.0],[58,0.0],[2,0.0]],"2017":[[6,3.73],[23,6.42],[17,3.63],[6,3.67],[22,6.59],[2,1.3],[0,0.0],[41,7.87],[8,4.51]],"2016":[[2,1.2],[16,4.38],[14,2.89],[4,2.39],[25,7.26],[10,6.28],[3,3.24],[24,4.54],[5,2.68]],"2015":[[5,2.99],[9,2.46],[16,3.3],[4,2.39],[14,4.07],[3,1.89],[2,2.16],[18,3.4],[3,1.61]],"2014":[[4,2.36],[3,0.81],[21,4.29],[0,0.0],[25,7.2],[6,3.72],[1,1.07],[34,6.4],[1,0.53]],"2013":[[4,2.36],[9,2.44],[8,1.64],[2,1.19],[16,4.61],[6,3.72],[3,3.21],[20,3.77],[5,2.64]],"2012":[[4,2.34],[11,2.93],[10,2.02],[2,1.17],[11,3.14],[3,1.83],[2,2.12],[24,4.49],[2,1.04]],"2011":[[4,2.32],[8,2.13],[12,2.41],[3,1.75],[5,1.42],[2,1.22],[1,1.05],[21,3.93],[6,3.1]],"2010":[[6,3.49],[9,2.4],[10,2.0],[2,1.16],[11,3.11],[1,0.61],[13,13.65],[31,5.81],[3,1.54]],"2009":[[3,1.75],[4,1.07],[13,2.6],[0,0.0],[11,3.1],[5,3.03],[7,7.36],[21,3.94],[1,0.51]],"2008":[[6,3.49],[7,1.87],[12,2.4],[1,0.58],[7,1.98],[2,1.22],[1,1.06],[24,4.54],[4,2.03]]},"66":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.64],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,3.11],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[1,0.58],[0,0.0],[0,0.0],[1,0.58],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"67":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"74":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.62],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.53]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.53]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.61],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[1,0.51]],"2008":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,1.52]]},"75":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"68":{"2024":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"69":{"2024":[[25,15.58],[38,10.56],[31,6.92],[52,32.9],[61,18.62],[36,22.99],[6,6.66],[332,63.22],[17,10.23]],"2023":[[3,1.89],[12,3.36],[8,1.79],[17,10.78],[6,1.83],[1,0.64],[2,2.24],[41,7.87],[3,1.8]],"2022":[[0,0.0],[0,0.0],[0,0.0],[2,1.27],[2,0.61],[1,0.65],[0,0.0],[1,0.19],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[1,0.63],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[8,2.25],[1,0.22],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[4,0.77],[0,0.0]],"2019":[[2,1.26],[5,1.4],[3,0.65],[3,1.85],[6,1.81],[2,1.3],[0,0.0],[49,9.43],[0,0.0]],"2018":[[2,0.0],[2,0.0],[4,0.0],[4,0.0],[3,0.0],[2,0.0],[3,0.0],[17,0.0],[0,0.0]],"2017":[[3,1.87],[5,1.4],[20,4.27],[3,1.84],[12,3.6],[2,1.3],[1,1.12],[31,5.95],[1,0.56]],"2016":[[11,6.57],[5,1.37],[9,1.86],[10,5.98],[15,4.36],[3,1.89],[6,6.48],[17,3.22],[0,0.0]],"2015":[[5,2.99],[33,9.03],[17,3.51],[96,57.38],[36,10.45],[1,0.63],[12,12.95],[33,6.24],[3,1.61]],"2014":[[4,2.36],[13,3.53],[1,0.2],[11,6.52],[11,3.17],[0,0.0],[0,0.0],[29,5.46],[2,1.06]],"2013":[[7,4.13],[1,0.27],[3,0.61],[1,0.59],[5,1.44],[4,2.48],[0,0.0],[5,0.94],[4,2.12]],"2012":[[1,0.58],[3,0.8],[8,1.62],[1,0.59],[4,1.14],[3,1.83],[0,0.0],[4,0.75],[0,0.0]],"2011":[[5,2.9],[8,2.13],[2,0.4],[11,6.41],[29,8.22],[1,0.61],[4,4.2],[1,0.19],[1,0.52]],"2010":[[0,0.0],[3,0.8],[0,0.0],[1,0.58],[1,0.28],[1,0.61],[0,0.0],[3,0.56],[1,0.51]],"2009":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[0,0.0],[1,1.05],[1,0.19],[1,0.51]],"2008":[[1,0.58],[3,0.8],[0,0.0],[6,3.46],[2,0.57],[0,0.0],[0,0.0],[5,0.95],[1,0.51]]},"70":{"2024":[[5,3.12],[3,0.83],[3,0.67],[0,0.0],[3,0.92],[1,0.64],[0,0.0],[3,0.57],[1,0.6]],"2023":[[2,1.26],[4,1.12],[1,0.22],[0,0.0],[4,1.22],[0,0.0],[3,3.35],[1,0.19],[0,0.0]],"2022":[[5,3.16],[4,1.13],[2,0.45],[0,0.0],[1,0.31],[0,0.0],[1,1.13],[3,0.58],[0,0.0]],"2021":[[3,1.89],[3,0.84],[5,1.09],[2,1.25],[0,0.0],[2,1.3],[1,1.11],[5,0.96],[0,0.0]],"2020":[[8,5.03],[0,0.0],[5,1.09],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[1,0.58]],"2019":[[2,1.26],[3,0.84],[2,0.43],[2,1.23],[0,0.0],[1,0.65],[4,4.51],[4,0.77],[0,0.0]],"2018":[[2,1.24],[0,0.0],[1,0.0],[2,0.0],[0,0.0],[2,0.0],[3,0.0],[4,0.0],[3,0.0]],"2017":[[2,1.24],[4,1.12],[2,0.43],[0,0.0],[0,0.0],[0,0.0],[4,4.5],[5,0.96],[3,1.69]],"2016":[[1,0.6],[0,0.0],[4,0.83],[5,2.99],[2,0.58],[1,0.63],[7,7.56],[5,0.95],[1,0.54]],"2015":[[3,1.79],[0,0.0],[3,0.62],[1,0.6],[1,0.29],[2,1.26],[4,4.32],[5,0.95],[0,0.0]],"2014":[[5,2.95],[2,0.54],[4,0.82],[1,0.59],[3,0.86],[0,0.0],[3,3.21],[5,0.94],[2,1.06]],"2013":[[1,0.59],[2,0.54],[1,0.2],[2,1.19],[0,0.0],[2,1.24],[1,1.07],[1,0.19],[1,0.53]],"2012":[[2,1.17],[2,0.53],[2,0.4],[0,0.0],[0,0.0],[3,1.83],[6,6.35],[2,0.37],[0,0.0]],"2011":[[2,1.16],[2,0.53],[5,1.0],[2,1.17],[0,0.0],[1,0.61],[4,4.2],[2,0.37],[0,0.0]],"2010":[[2,1.16],[6,1.6],[2,0.4],[1,0.58],[0,0.0],[0,0.0],[5,5.25],[1,0.19],[0,0.0]],"2009":[[2,1.16],[1,0.27],[3,0.6],[5,2.89],[4,1.13],[2,1.21],[6,6.31],[3,0.56],[0,0.0]],"2008":[[2,1.16],[3,0.8],[3,0.6],[4,2.31],[1,0.28],[0,0.0],[4,4.23],[7,1.32],[1,0.51]]},"71":{"2024":[[3,1.87],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2023":[[0,0.0],[0,0.0],[18,4.02],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.3],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[4,2.52],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.65],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,1.24],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[2,1.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,2.12],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[3,1.75],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[1,0.58],[5,1.33],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[4,2.31],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"72":{"2024":[[8,4.99],[32,8.9],[41,9.16],[12,7.59],[12,3.66],[11,7.02],[3,3.33],[36,6.86],[8,4.81]],"2023":[[6,3.79],[22,6.16],[42,9.39],[12,7.61],[24,7.34],[7,4.51],[8,8.94],[52,9.98],[13,7.81]],"2022":[[13,8.22],[23,6.48],[32,7.14],[14,8.86],[19,5.83],[4,2.6],[4,4.53],[27,5.21],[13,7.77]],"2021":[[9,5.66],[20,5.62],[43,9.36],[17,10.63],[18,5.44],[5,3.24],[4,4.45],[23,4.42],[15,8.74]],"2020":[[3,1.89],[32,9.0],[39,8.49],[13,8.13],[14,4.23],[5,3.24],[3,3.34],[36,6.91],[11,6.41]],"2019":[[9,5.68],[34,9.52],[47,10.13],[16,9.87],[24,7.24],[7,4.56],[5,5.64],[52,10.0],[15,8.59]],"2018":[[8,0.0],[24,0.0],[63,0.0],[20,0.0],[18,0.0],[5,0.0],[4,0.0],[42,0.0],[27,0.0]],"2017":[[10,6.22],[27,7.54],[76,16.23],[8,4.9],[22,6.59],[9,5.84],[5,5.62],[44,8.44],[16,9.02]],"2016":[[20,11.95],[35,9.58],[68,14.03],[15,8.97],[19,5.52],[7,4.4],[5,5.4],[42,7.94],[29,15.56]],"2015":[[16,9.56],[27,7.39],[67,13.83],[27,16.14],[34,9.87],[9,5.66],[5,5.4],[40,7.57],[24,12.88]],"2014":[[19,11.21],[41,11.12],[88,17.99],[19,11.26],[37,10.66],[4,2.48],[5,5.34],[41,7.72],[32,16.93]],"2013":[[20,11.8],[31,8.41],[87,17.78],[18,10.67],[34,9.79],[10,6.2],[11,11.76],[46,8.66],[30,15.87]],"2012":[[14,8.17],[48,12.8],[104,21.03],[29,16.99],[44,12.55],[3,1.83],[9,9.52],[69,12.91],[33,17.22]],"2011":[[18,10.42],[35,9.32],[96,19.28],[20,11.65],[34,9.63],[8,4.87],[11,11.55],[51,9.53],[35,18.1]],"2010":[[20,11.63],[51,13.61],[102,20.43],[31,17.97],[45,12.73],[14,8.52],[11,11.55],[114,21.36],[33,16.99]],"2009":[[19,11.07],[45,11.98],[98,19.59],[35,20.2],[46,12.97],[16,9.71],[10,10.52],[80,15.02],[27,13.8]],"2008":[[30,17.46],[50,13.38],[87,17.39],[53,30.56],[50,14.15],[18,10.98],[15,15.85],[55,10.4],[28,14.2]]},"73":{"2024":[[1,0.62],[19,5.28],[16,3.57],[91,57.57],[4,1.22],[0,0.0],[2,2.22],[4,0.76],[2,1.2]],"2023":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2022":[[0,0.0],[0,0.0],[1,0.22],[0,0.0],[1,0.31],[0,0.0],[0,0.0],[1,0.19],[1,0.6]],"2021":[[0,0.0],[2,0.56],[3,0.65],[0,0.0],[1,0.3],[1,0.65],[4,4.45],[1,0.19],[1,0.58]],"2020":[[0,0.0],[2,0.56],[2,0.44],[12,7.5],[1,0.3],[0,0.0],[1,1.11],[2,0.38],[1,0.58]],"2019":[[1,0.63],[5,1.4],[3,0.65],[161,99.36],[1,0.3],[0,0.0],[0,0.0],[7,1.35],[2,1.15]],"2018":[[1,4.98],[0,0.0],[0,0.0],[2,0.0],[1,0.0],[0,0.0],[1,0.0],[0,0.0],[2,0.0]],"2017":[[0,0.0],[0,0.0],[1,0.21],[5,3.06],[0,0.0],[0,0.0],[0,0.0],[5,0.96],[3,1.69]],"2016":[[0,0.0],[0,0.0],[1,0.21],[0,0.0],[0,0.0],[0,0.0],[1,1.08],[0,0.0],[1,0.54]],"2015":[[0,0.0],[3,0.82],[1,0.21],[9,5.38],[2,0.58],[1,0.63],[3,3.24],[6,1.13],[6,3.22]],"2014":[[0,0.0],[6,1.63],[6,1.23],[67,39.7],[1,0.29],[0,0.0],[0,0.0],[8,1.51],[7,3.7]],"2013":[[0,0.0],[0,0.0],[0,0.0],[1,0.59],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2012":[[0,0.0],[1,0.27],[0,0.0],[0,0.0],[1,0.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[1,0.27],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[1,0.58],[1,0.28],[0,0.0],[1,1.05],[0,0.0],[1,0.51]],"2009":[[0,0.0],[2,0.53],[2,0.4],[3,1.73],[2,0.56],[2,1.21],[2,2.1],[10,1.88],[2,1.02]],"2008":[[2,1.16],[17,4.55],[18,3.6],[42,24.21],[10,2.83],[1,0.61],[6,6.34],[31,5.86],[26,13.18]]},"76":{"2024":[[20,12.46],[67,18.62],[37,8.26],[25,15.82],[42,12.82],[31,19.79],[9,9.99],[61,11.62],[15,9.02]],"2023":[[26,16.41],[68,19.04],[39,8.72],[42,26.62],[48,14.67],[38,24.48],[15,16.76],[75,14.39],[25,15.03]],"2022":[[26,16.44],[61,17.18],[48,10.71],[42,26.58],[39,11.97],[26,16.9],[15,16.97],[74,14.29],[22,13.16]],"2021":[[17,10.7],[53,14.9],[32,6.97],[11,6.88],[30,9.06],[40,25.94],[6,6.67],[50,9.6],[16,9.32]],"2020":[[22,13.85],[114,32.05],[71,15.46],[48,30.02],[33,9.97],[42,27.24],[14,15.57],[142,27.27],[21,12.23]],"2019":[[59,37.22],[115,32.21],[202,43.56],[83,51.22],[144,43.44],[66,43.04],[72,81.26],[237,45.59],[134,76.77]],"2018":[[83,0.0],[226,0.0],[224,0.0],[135,0.0],[103,0.0],[188,0.0],[211,0.0],[271,0.0],[43,0.0]],"2017":[[257,159.93],[299,83.48],[279,59.58],[58,35.5],[179,53.66],[92,59.67],[78,87.74],[279,53.54],[87,49.04]],"2016":[[304,181.7],[965,264.2],[933,192.6],[319,190.7],[194,56.3],[384,241.3],[337,363.8],[1147,217.0],[264,141.6]],"2015":[[402,240.24],[1259,344.65],[1045,215.67],[1031,616.25],[387,112.37],[663,416.65],[480,518.19],[392,74.15],[97,52.04]],"2014":[[546,322.2],[818,221.86],[451,92.18],[473,280.3],[303,87.26],[554,343.3],[256,273.58],[990,186.39],[104,55.01]],"2013":[[267,157.56],[806,218.61],[444,90.75],[433,256.59],[329,94.74],[400,247.87],[360,384.72],[572,107.69],[132,69.83]],"2012":[[295,172.25],[1063,283.49],[1236,249.97],[773,452.81],[330,94.13],[306,186.93],[553,585.05],[880,164.71],[404,210.84]],"2011":[[204,118.12],[922,245.44],[783,157.29],[527,306.99],[361,102.27],[225,137.05],[207,217.38],[848,158.54],[172,88.94]],"2010":[[149,86.68],[784,209.16],[549,109.96],[398,230.71],[382,108.03],[382,232.55],[315,330.68],[571,107.0],[349,179.7]],"2009":[[515,299.98],[1009,268.66],[540,107.96],[568,327.74],[308,86.86],[304,184.41],[153,160.88],[960,180.26],[191,97.62]],"2008":[[425,247.36],[1037,277.52],[821,164.13],[347,200.05],[460,130.16],[172,104.94],[652,688.88],[778,147.06],[209,105.97]]},"77":{"2024":[[5,3.12],[5,1.39],[8,1.79],[3,1.9],[21,6.41],[3,1.92],[0,0.0],[28,5.33],[5,3.01]],"2023":[[5,3.16],[10,2.8],[3,0.67],[6,3.8],[32,9.78],[3,1.93],[0,0.0],[18,3.45],[2,1.2]],"2022":[[4,2.53],[9,2.53],[2,0.45],[3,1.9],[12,3.68],[5,3.25],[2,2.26],[12,2.32],[6,3.59]],"2021":[[4,2.52],[4,1.12],[7,1.52],[4,2.5],[13,3.93],[0,0.0],[0,0.0],[15,2.88],[2,1.17]],"2020":[[3,1.89],[3,0.84],[1,0.22],[4,2.5],[17,5.13],[0,0.0],[0,0.0],[18,3.46],[2,1.17]],"2019":[[5,3.15],[1,0.28],[4,0.86],[5,3.09],[21,6.34],[2,1.3],[3,3.39],[22,4.23],[1,0.57]],"2018":[[2,51.7],[10,0.0],[4,0.0],[8,0.0],[21,0.0],[2,0.0],[8,0.0],[10,0.0],[3,0.0]],"2017":[[5,3.11],[12,3.35],[5,1.07],[3,1.84],[8,2.4],[2,1.3],[8,9.0],[16,3.07],[0,0.0]],"2016":[[3,1.79],[7,1.92],[2,0.41],[0,0.0],[21,6.1],[3,1.89],[3,3.24],[15,2.84],[4,2.15]],"2015":[[1,0.6],[4,1.1],[3,0.62],[3,1.79],[13,3.77],[3,1.89],[0,0.0],[9,1.7],[1,0.54]],"2014":[[2,1.18],[1,0.27],[4,0.82],[5,2.96],[10,2.88],[2,1.24],[2,2.14],[18,3.39],[2,1.06]],"2013":[[0,0.0],[4,1.08],[1,0.2],[1,0.59],[10,2.88],[4,2.48],[6,6.41],[7,1.32],[1,0.53]],"2012":[[2,1.17],[0,0.0],[1,0.2],[2,1.17],[12,3.42],[3,1.83],[2,2.12],[7,1.31],[7,3.65]],"2011":[[0,0.0],[9,2.4],[6,1.21],[2,1.17],[8,2.27],[3,1.83],[4,4.2],[8,1.5],[4,2.07]],"2010":[[0,0.0],[1,0.27],[5,1.0],[2,1.16],[0,0.0],[3,1.83],[5,5.25],[5,0.94],[2,1.03]],"2009":[[0,0.0],[3,0.8],[2,0.4],[0,0.0],[0,0.0],[1,0.61],[2,2.1],[3,0.56],[2,1.02]],"2008":[[0,0.0],[2,0.54],[5,1.0],[4,2.31],[0,0.0],[1,0.61],[4,4.23],[3,0.57],[4,2.03]]},"38":{"2023":[[2,1.26],[2,0.56],[0,0.0],[1,0.63],[1,0.31],[0,0.0],[0,0.0],[4,0.77],[0,0.0]]},"19":{"2022":[[4,2.53],[3,0.84],[2,0.45],[1,0.63],[1,0.31],[2,1.3],[0,0.0],[1,0.19],[1,0.6]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2019":[[0,0.0],[0,0.0],[1,0.22],[1,0.62],[0,0.0],[0,0.0],[1,1.13],[3,0.58],[0,0.0]],"2018":[[0,0.0],[0,0.0],[2,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2016":[[1,0.6],[0,0.0],[1,0.21],[1,0.6],[2,0.58],[1,0.63],[0,0.0],[5,0.95],[0,0.0]],"2015":[[1,0.6],[3,0.82],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.08],[2,0.38],[0,0.0]],"2014":[[0,0.0],[2,0.54],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"26":{"2022":[[1717,1085.0],[3683,1037.0],[3334,743.9],[1796,1136.0],[4119,1263.0],[1777,1155.0],[1280,1448.0],[6240,1204.0],[1520,909.01]],"2021":[[237,149.16],[485,136.35],[291,63.37],[99,61.91],[199,60.11],[188,121.92],[113,125.71],[415,79.69],[141,82.14]],"2020":[[1590,1000.0],[4199,1180.0],[6198,1349.0],[1943,1215.0],[3161,954.75],[2169,1406.0],[1128,1254.0],[7336,1408.0],[1888,1099.0]],"2019":[[2125,1340.0],[5649,1582.0],[5258,1133.0],[2667,1645.0],[4840,1460.0],[2250,1467.0],[949,1071.0],[9531,1833.0],[2642,1513.0]],"2018":[[1903,1184.0],[6393,0.0],[5290,0.0],[3206,0.0],[6271,0.0],[2129,0.0],[1569,0.0],[7523,0.0],[2738,0.0]],"2017":[[2159,1343.0],[5296,1478.0],[3949,843.23],[2697,1650.0],[5028,1507.0],[2128,1380.0],[965,1085.0],[7534,1445.0],[2152,1213.0]],"2016":[[2287,1366.0],[5870,1606.0],[4851,1001.0],[2660,1589.0],[3872,1124.0],[1857,1166.0],[1041,1123.0],[6834,1292.0],[2483,1332.0]],"2015":[[3915,2339.0],[6737,1844.0],[6158,1270.0],[3420,2044.0],[7552,2192.0],[3499,2198.0],[1322,1427.0],[9580,1812.0],[3886,2084.0]],"2014":[[2131,1257.0],[5153,1397.0],[6934,1417.0],[2937,1740.0],[4422,1273.0],[2484,1539.0],[682,728.83],[7237,1362.0],[3093,1636.0]],"2013":[[1815,1071.0],[3038,823.97],[6784,1386.0],[2216,1313.0],[3717,1070.0],[2403,1489.0],[481,514.03],[4670,879.24],[3553,1879.0]],"2012":[[2126,1241.0],[4719,1258.0],[8705,1760.0],[3070,1798.0],[2023,577.07],[2462,1503.0],[683,722.58],[7154,1339.0],[3347,1746.0]],"2011":[[1666,964.66],[4774,1270.0],[9292,1866.0],[2970,1730.0],[2872,813.63],[3051,1858.0],[652,684.71],[5199,972.0],[2825,1460.0]],"2010":[[601,349.63],[1819,485.0],[4801,962.0],[961,557.07],[1448,409.0],[1145,697.0],[107,112.33],[1856,348.0],[1339,689.0]],"2009":[[3351,1951.89],[9048,2409.18],[13440,2687.09],[4013,2315.56],[7444,2099.22],[4417,2679.34],[1659,1744.46],[11167,2096.79],[3616,1848.06]],"2008":[[1790,1041.82],[8014,2144.66],[17674,3533.39],[2793,1610.23],[5414,1531.96],[2394,1460.66],[812,857.93],[5960,1126.61],[3627,1839.05]]},"27":{"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[6,1.69],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[151,42.45],[0,0.0],[1,0.63],[0,0.0],[0,0.0],[3,3.34],[99,19.01],[1,0.58]],"2019":[[0,0.0],[289,80.94],[0,0.0],[7,4.32],[0,0.0],[4,2.61],[0,0.0],[291,55.98],[1,0.57]],"2018":[[0,0.0],[309,0.0],[2,0.0],[6,0.0],[0,0.0],[1,0.0],[1,0.0],[264,0.0],[0,0.0]],"2017":[[3,1.87],[101,28.2],[0,0.0],[0,0.0],[6,1.8],[0,0.0],[0,0.0],[52,9.98],[1,0.56]],"2016":[[3,1.79],[54,14.78],[0,0.0],[3,1.79],[12,3.48],[1,0.63],[0,0.0],[27,5.11],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[15,2.84],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[35,6.59],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[1,0.59],[0,0.0],[0,0.0],[0,0.0],[19,3.58],[0,0.0]],"2012":[[0,0.0],[1,0.27],[0,0.0],[1,0.59],[0,0.0],[0,0.0],[0,0.0],[45,8.42],[0,0.0]],"2011":[[0,0.0],[34,9.05],[15,3.01],[0,0.0],[4,1.13],[0,0.0],[0,0.0],[19,3.55],[0,0.0]],"2010":[[0,0.0],[19,5.07],[2,0.4],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[4,0.75],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"39":{"2022":[[4,2.53],[0,0.0],[2,0.45],[0,0.0],[0,0.0],[1,0.65],[0,0.0],[3,0.58],[0,0.0]],"2021":[[1,0.63],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[7,1.34],[0,0.0]],"2020":[[0,0.0],[1,0.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[1,0.63],[2,0.56],[6,1.29],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[5,0.96],[0,0.0]],"2018":[[0,1.87],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[1,0.62],[1,0.28],[6,1.28],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[6,1.15],[0,0.0]],"2016":[[0,0.0],[0,0.0],[5,1.03],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,0.38],[0,0.0]],"2015":[[0,0.0],[0,0.0],[7,1.44],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.57],[0,0.0]],"2014":[[0,0.0],[0,0.0],[11,2.25],[3,1.78],[0,0.0],[0,0.0],[0,0.0],[1,0.19],[0,0.0]],"2013":[[0,0.0],[0,0.0],[6,1.23],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[4,0.81],[0,0.0],[0,0.0],[0,0.0],[1,1.06],[2,0.37],[0,0.0]],"2011":[[0,0.0],[1,0.27],[1,0.2],[1,0.58],[1,0.28],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2010":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[1,0.2],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"40":{"2022":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2021":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2020":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2013":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2012":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[4,1.13],[0,0.0],[0,0.0],[7,1.31],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"49":{"2022":[[8,5.06],[8,2.25],[0,0.0],[1,0.63],[10,3.07],[10,6.5],[1,1.13],[1,0.19],[3,1.79]],"2021":[[4,2.52],[3,0.84],[2,0.44],[0,0.0],[0,0.0],[2,1.3],[6,6.67],[1,0.19],[1,0.58]],"2020":[[1,0.63],[0,0.0],[0,0.0],[2,1.25],[6,1.81],[31,20.1],[0,0.0],[3,0.58],[0,0.0]],"2019":[[13,8.2],[0,0.0],[0,0.0],[0,0.0],[13,3.92],[74,48.26],[7,7.9],[0,0.0],[4,2.29]],"2018":[[1,5.6],[1,0.0],[0,0.0],[1,0.0],[9,0.0],[35,0.0],[5,0.0],[3,0.0],[6,0.0]],"2017":[[1,0.62],[0,0.0],[1,0.21],[0,0.0],[10,3.0],[36,23.35],[9,10.12],[6,1.15],[1,0.56]],"2016":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[5,1.45],[42,26.39],[8,8.64],[1,0.19],[1,0.54]],"2015":[[0,0.0],[2,0.55],[1,0.21],[0,0.0],[4,1.16],[36,22.62],[6,6.48],[3,0.57],[0,0.0]],"2014":[[2,1.18],[0,0.0],[0,0.0],[0,0.0],[2,0.58],[22,13.63],[5,5.34],[1,0.19],[2,1.06]],"2013":[[1,0.59],[1,0.27],[1,0.2],[1,0.59],[4,1.15],[13,8.06],[13,13.89],[2,0.38],[2,1.06]],"2012":[[0,0.0],[0,0.0],[1,0.2],[5,2.93],[1,0.29],[15,9.16],[38,40.2],[2,0.37],[0,0.0]],"2011":[[0,0.0],[2,0.53],[2,0.4],[0,0.0],[5,1.42],[17,10.36],[16,16.8],[3,0.56],[0,0.0]],"2010":[[0,0.0],[0,0.0],[3,0.6],[1,0.58],[0,0.0],[17,10.35],[47,49.34],[0,0.0],[0,0.0]],"2009":[[3,1.75],[0,0.0],[0,0.0],[9,5.19],[3,0.85],[20,12.13],[29,30.49],[3,0.56],[0,0.0]],"2008":[[0,0.0],[3,0.8],[3,0.6],[12,6.92],[4,1.13],[24,14.64],[16,16.91],[2,0.38],[4,2.03]]},"2":{"2020":[[7223,4545.0],[24024,6754.0],[21945,4778.0],[10013,6261.0],[18556,5604.0],[8313,5390.0],[5587,6215.0],[31877,6121.0],[8673,5052.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"34":{"2020":[[0,0.0],[57,16.03],[1,0.22],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[13,2.5],[0,0.0]],"2019":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"31":{"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,597.19],[0,581.61],[0,576.39],[0,561.91],[0,625.11],[0,564.67],[0,577.68],[0,564.97],[0,700.58]],"2016":[[0,613.36],[0,570.95],[0,583.97],[0,541.24],[0,582.09],[0,526.34],[0,582.46],[0,553.7],[0,636.9]],"2015":[[0,556.89],[0,536.77],[0,573.56],[0,527.12],[0,542.98],[0,510.33],[0,534.97],[0,539.44],[0,645.04]],"2014":[[0,594.63],[0,528.06],[0,548.16],[0,529.58],[0,547.92],[0,526.62],[0,527.91],[0,521.68],[0,620.17]],"2013":[[0,576.93],[0,527.14],[0,527.41],[0,532.09],[0,522.36],[0,494.74],[0,496.3],[0,503.11],[0,611.89]],"2012":[[0,522.58],[0,538.98],[0,492.06],[0,482.68],[0,499.2],[0,461.21],[0,483.49],[0,501.8],[0,562.07]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]},"61":{"2018":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2017":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2016":[[1,0.6],[0,0.0],[0,0.0],[1,0.6],[0,0.0],[0,0.0],[0,0.0],[3,0.57],[3,1.61]],"2015":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2014":[[1,0.59],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[3,0.56],[0,0.0]],"2013":[[3,1.77],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.07],[0,0.0],[0,0.0]],"2012":[[2,1.17],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[2,1.22],[1,1.06],[0,0.0],[0,0.0]],"2011":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2010":[[2,1.16],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[1,1.05],[0,0.0],[0,0.0]],"2009":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]],"2008":[[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0],[0,0.0]]}}};</script>
+<script>window.CYL_GEO = {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-4.7221,41.1493],[-4.7171,41.0892],[-4.7091,41.0854],[-4.7032,41.0524],[-4.6395,41.0301],[-4.6067,40.9708],[-4.5664,40.9562],[-4.5553,40.8936],[-4.5353,40.8724],[-4.5464,40.8255],[-4.4932,40.8305],[-4.4806,40.7862],[-4.4311,40.7424],[-4.4196,40.6334],[-4.3197,40.6475],[-4.275,40.6765],[-4.2529,40.6895],[-4.1603,40.6899],[-4.1765,40.6163],[-4.2835,40.5957],[-4.2892,40.5641],[-4.3237,40.5496],[-4.3268,40.414],[-4.4147,40.4104],[-4.4437,40.3857],[-4.4558,40.3193],[-4.5044,40.3151],[-4.5692,40.2572],[-4.5607,40.2228],[-4.6401,40.1972],[-4.6873,40.212],[-4.6981,40.2822],[-4.7612,40.2609],[-4.9137,40.1736],[-4.9255,40.136],[-4.9609,40.1216],[-5.0067,40.1299],[-5.0185,40.1591],[-5.0628,40.1516],[-5.128,40.102],[-5.1998,40.0824],[-5.2153,40.1078],[-5.3201,40.1079],[-5.367,40.1604],[-5.3697,40.2183],[-5.3434,40.2635],[-5.4291,40.2526],[-5.4991,40.1989],[-5.5481,40.1972],[-5.61,40.2155],[-5.622,40.2459],[-5.6927,40.2921],[-5.7376,40.2941],[-5.6864,40.3554],[-5.6912,40.422],[-5.6342,40.4604],[-5.5898,40.4672],[-5.5448,40.4231],[-5.5094,40.4591],[-5.4605,40.474],[-5.4311,40.5672],[-5.5119,40.5482],[-5.4997,40.5816],[-5.4477,40.5796],[-5.3732,40.6388],[-5.376,40.6465],[-5.3648,40.6794],[-5.2928,40.7103],[-5.1615,40.814],[-5.1638,40.8684],[-5.1525,40.874],[-5.1113,40.9156],[-5.1216,40.9315],[-5.1249,40.9436],[-5.1259,40.9488],[-5.1276,40.9541],[-5.092,41.0069],[-5.0995,41.013],[-5.1465,41.0436],[-5.1486,41.0922],[-5.1249,41.132],[-5.0599,41.1386],[-4.9897,41.1608],[-4.8637,41.094],[-4.828,41.0992],[-4.7862,41.1436],[-4.7221,41.1493]]]},"properties":{"Codigo":"05","Texto":"Ávila","Texto_Alt":"Ávila","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"MultiPolygon","coordinates":[[[[-2.8263,42.7853],[-2.7316,42.7945],[-2.5626,42.7411],[-2.5897,42.7106],[-2.5781,42.674],[-2.6349,42.6478],[-2.6592,42.6725],[-2.7679,42.666],[-2.7845,42.6989],[-2.8253,42.7089],[-2.8629,42.7455],[-2.8263,42.7853]]],[[[-2.9136,42.0229],[-3.0081,41.9222],[-3.0168,41.8869],[-3.0877,41.8763],[-3.1387,41.8123],[-3.279,41.8679],[-3.2836,41.7782],[-3.2795,41.7727],[-3.3544,41.7373],[-3.3584,41.6934],[-3.4071,41.6759],[-3.4592,41.5896],[-3.4685,41.589],[-3.5397,41.6076],[-3.5416,41.5776],[-3.6453,41.5721],[-3.7283,41.5176],[-3.7324,41.4699],[-3.7698,41.4602],[-3.7715,41.5223],[-3.8006,41.5211],[-3.8239,41.4811],[-3.8637,41.529],[-3.9145,41.5635],[-3.9807,41.5834],[-4.0304,41.6305],[-4.026,41.6924],[-4.0529,41.7196],[-4.0409,41.7684],[-4.038,41.7899],[-4.0901,41.8309],[-4.0888,41.8707],[-4.0376,41.8728],[-3.9807,41.9006],[-3.9907,41.9598],[-4.0148,41.9986],[-3.9802,42.043],[-4.0109,42.0515],[-4.0799,42.0368],[-4.1041,42.0616],[-4.0562,42.1009],[-4.1202,42.1281],[-4.205,42.1336],[-4.1886,42.1764],[-4.2321,42.2173],[-4.2322,42.2569],[-4.2935,42.3881],[-4.331,42.3909],[-4.3353,42.4306],[-4.3067,42.4551],[-4.2533,42.4567],[-4.2461,42.4924],[-4.2721,42.52],[-4.2939,42.6053],[-4.2739,42.617],[-4.257,42.6881],[-4.145,42.7525],[-4.1096,42.7339],[-4.0813,42.7615],[-4.0459,42.7666],[-3.9996,42.769],[-3.9657,42.7586],[-3.8944,42.8045],[-3.8542,42.7876],[-3.8217,42.8003],[-3.8254,42.8686],[-3.8607,42.8872],[-3.8299,42.9277],[-3.8671,42.9548],[-3.8913,42.9255],[-3.9434,42.9093],[-3.991,42.9311],[-3.9455,43.0058],[-3.8907,43.0418],[-3.8345,43.0581],[-3.7549,43.1005],[-3.7047,43.1163],[-3.651,43.181],[-3.5076,43.136],[-3.4219,43.1324],[-3.3506,43.1544],[-3.2781,43.1944],[-3.2235,43.1723],[-3.1412,43.1654],[-3.1818,43.1209],[-3.1339,43.0972],[-3.1448,43.0068],[-3.0718,43.0056],[-3.0415,42.9699],[-2.9812,42.9394],[-3.0189,42.9085],[-3.1265,42.9041],[-3.1447,42.9347],[-3.2247,42.9497],[-3.2826,42.8755],[-3.2258,42.8301],[-3.1907,42.8695],[-3.1499,42.8613],[-3.1592,42.8046],[-3.1006,42.7672],[-3.017,42.7411],[-2.987,42.7089],[-2.9025,42.6936],[-2.8961,42.655],[-2.9335,42.6345],[-3.0048,42.6443],[-3.0694,42.6388],[-3.0635,42.5913],[-3.1054,42.5539],[-3.0718,42.5277],[-3.0733,42.4765],[-3.0531,42.3734],[-3.1097,42.3514],[-3.0896,42.273],[-3.1038,42.2137],[-3.1279,42.2016],[-3.0344,42.086],[-2.9325,42.0809],[-2.9136,42.0229]]]]},"properties":{"Codigo":"09","Texto":"Burgos","Texto_Alt":"Burgos","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-4.737,43.021],[-4.7948,42.9867],[-4.8145,42.9234],[-4.8555,42.8917],[-4.8886,42.8411],[-4.9091,42.7794],[-4.9364,42.7445],[-4.8717,42.708],[-4.9003,42.6701],[-4.8947,42.6239],[-4.916,42.5548],[-4.888,42.537],[-4.9034,42.3856],[-4.9726,42.3744],[-4.9425,42.3465],[-4.9534,42.2972],[-5.0021,42.2891],[-5.0938,42.3093],[-5.1979,42.2605],[-5.2447,42.2639],[-5.2656,42.2109],[-5.3121,42.1998],[-5.3881,42.2214],[-5.3889,42.1725],[-5.3715,42.1301],[-5.3763,42.0415],[-5.4216,42.0307],[-5.4809,42.0524],[-5.5209,42.0971],[-5.5528,42.0637],[-5.5973,42.0794],[-5.6053,42.0806],[-5.6434,42.131],[-5.7429,42.1133],[-5.7595,42.1344],[-5.8381,42.1188],[-5.9116,42.1406],[-5.9535,42.1237],[-6.0288,42.1576],[-6.1055,42.162],[-6.2124,42.1481],[-6.252,42.1731],[-6.3295,42.1999],[-6.4279,42.2019],[-6.4976,42.182],[-6.526,42.2034],[-6.6133,42.2032],[-6.6386,42.2173],[-6.7038,42.2094],[-6.7843,42.2536],[-6.7411,42.2987],[-6.734,42.3591],[-6.8208,42.3856],[-6.8083,42.4686],[-6.9251,42.5194],[-6.9739,42.494],[-7.0522,42.5086],[-7.071,42.5379],[-7.0341,42.5841],[-7.047,42.6327],[-7.01,42.6498],[-7.0452,42.6948],[-7.0109,42.7237],[-6.9356,42.7409],[-6.8678,42.7872],[-6.8445,42.8281],[-6.8713,42.8738],[-6.7232,42.9174],[-6.6129,42.9246],[-6.5412,42.9125],[-6.4416,42.9396],[-6.3974,43.0383],[-6.3583,43.0567],[-6.3269,43.0313],[-6.2268,43.0089],[-6.2139,43.0467],[-6.1784,43.0478],[-6.1367,43.021],[-6.0898,43.0382],[-6.0919,43.0669],[-6.0206,43.0549],[-5.975,43.0654],[-5.9567,43.0186],[-5.8503,42.9674],[-5.7639,42.9701],[-5.7284,43.0425],[-5.6883,43.0569],[-5.6364,43.0352],[-5.5404,43.0184],[-5.4482,43.0554],[-5.3905,43.0493],[-5.3831,43.0872],[-5.2821,43.0774],[-5.1886,43.0998],[-5.1017,43.1018],[-5.0948,43.1434],[-5.0638,43.1795],[-4.9965,43.1858],[-4.9434,43.2246],[-4.8934,43.2384],[-4.8392,43.1898],[-4.8514,43.1259],[-4.8328,43.1027],[-4.7665,43.0745],[-4.737,43.021]]]},"properties":{"Codigo":"24","Texto":"León","Texto_Alt":"León","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-4.0813,42.7615],[-4.1096,42.7339],[-4.145,42.7525],[-4.257,42.6881],[-4.2739,42.617],[-4.2939,42.6053],[-4.2721,42.52],[-4.2461,42.4924],[-4.2533,42.4567],[-4.3067,42.4551],[-4.3353,42.4306],[-4.331,42.3909],[-4.2935,42.3881],[-4.2322,42.2569],[-4.2321,42.2173],[-4.1886,42.1764],[-4.205,42.1336],[-4.1202,42.1281],[-4.0562,42.1009],[-4.1041,42.0616],[-4.0799,42.0368],[-4.0109,42.0515],[-3.9802,42.043],[-4.0148,41.9986],[-3.9907,41.9598],[-3.9807,41.9006],[-4.0376,41.8728],[-4.0888,41.8707],[-4.0901,41.8309],[-4.038,41.7899],[-4.0409,41.7684],[-4.1003,41.7747],[-4.1507,41.7989],[-4.2363,41.8114],[-4.2866,41.7749],[-4.3259,41.768],[-4.404,41.7832],[-4.4501,41.7584],[-4.4937,41.7804],[-4.4733,41.843],[-4.4784,41.8433],[-4.5121,41.8233],[-4.5838,41.824],[-4.6697,41.9005],[-4.7892,41.818],[-4.8383,41.8985],[-4.8898,41.9328],[-5.0049,41.9379],[-4.9497,42.051],[-4.9168,42.0783],[-4.9275,42.1502],[-5.027,42.1539],[-5.0247,42.2199],[-5.0021,42.2891],[-4.9534,42.2972],[-4.9425,42.3465],[-4.9726,42.3744],[-4.9034,42.3856],[-4.888,42.537],[-4.916,42.5548],[-4.8947,42.6239],[-4.9003,42.6701],[-4.8717,42.708],[-4.9364,42.7445],[-4.9091,42.7794],[-4.8886,42.8411],[-4.8555,42.8917],[-4.8145,42.9234],[-4.7948,42.9867],[-4.737,43.021],[-4.6381,43.0167],[-4.6061,43.0358],[-4.5584,43.0195],[-4.5209,43.0474],[-4.4611,43.0607],[-4.3981,43.0349],[-4.3485,42.9726],[-4.2402,42.9565],[-4.2125,42.8463],[-4.1499,42.7893],[-4.0985,42.7912],[-4.0813,42.7615]]]},"properties":{"Codigo":"34","Texto":"Palencia","Texto_Alt":"Palencia","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-5.1249,41.132],[-5.1486,41.0922],[-5.1465,41.0436],[-5.0995,41.013],[-5.092,41.0069],[-5.1276,40.9541],[-5.1259,40.9488],[-5.1249,40.9436],[-5.1216,40.9315],[-5.1113,40.9156],[-5.1525,40.874],[-5.1638,40.8684],[-5.1615,40.814],[-5.2928,40.7103],[-5.3648,40.6794],[-5.376,40.6465],[-5.3732,40.6388],[-5.4477,40.5796],[-5.4997,40.5816],[-5.5119,40.5482],[-5.4311,40.5672],[-5.4605,40.474],[-5.5094,40.4591],[-5.5448,40.4231],[-5.5898,40.4672],[-5.6342,40.4604],[-5.6912,40.422],[-5.6864,40.3554],[-5.7376,40.2941],[-5.765,40.2808],[-5.795,40.3512],[-5.885,40.3261],[-5.9078,40.2904],[-5.9417,40.2844],[-6.0053,40.3054],[-6.016,40.3403],[-6.0824,40.3632],[-6.0752,40.4034],[-6.1295,40.4208],[-6.2001,40.4824],[-6.241,40.4852],[-6.2944,40.452],[-6.3341,40.4477],[-6.3763,40.4002],[-6.5363,40.3472],[-6.5604,40.329],[-6.5562,40.2908],[-6.587,40.2707],[-6.6718,40.2632],[-6.7182,40.2692],[-6.7556,40.2463],[-6.8372,40.2486],[-6.8629,40.2974],[-6.7904,40.3347],[-6.781,40.3647],[-6.8348,40.4082],[-6.8497,40.4526],[-6.8106,40.5051],[-6.8008,40.5506],[-6.8448,40.5659],[-6.7939,40.6617],[-6.8312,40.7526],[-6.8176,40.8085],[-6.8602,40.9489],[-6.9312,41.0168],[-6.9151,41.0389],[-6.836,41.0282],[-6.7733,41.0747],[-6.7703,41.1244],[-6.6965,41.1864],[-6.6804,41.2186],[-6.6089,41.2497],[-6.5713,41.239],[-6.4797,41.2943],[-6.3914,41.2789],[-6.3723,41.2863],[-6.1345,41.1904],[-6.1093,41.2126],[-6.0088,41.2005],[-6.0026,41.1531],[-5.9632,41.146],[-5.9131,41.1783],[-5.9213,41.2182],[-5.8977,41.2386],[-5.8352,41.2203],[-5.7644,41.2161],[-5.6789,41.2319],[-5.5879,41.2024],[-5.555,41.2138],[-5.4966,41.1773],[-5.4076,41.1856],[-5.4002,41.1454],[-5.2979,41.1259],[-5.2887,41.182],[-5.274,41.1972],[-5.2719,41.198],[-5.2388,41.1939],[-5.2308,41.19],[-5.1364,41.1412],[-5.1283,41.1336],[-5.1249,41.132]]]},"properties":{"Codigo":"37","Texto":"Salamanca","Texto_Alt":"Salamanca","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-4.1603,40.6899],[-4.2529,40.6895],[-4.275,40.6765],[-4.3197,40.6475],[-4.4196,40.6334],[-4.4311,40.7424],[-4.4806,40.7862],[-4.4932,40.8305],[-4.5464,40.8255],[-4.5353,40.8724],[-4.5553,40.8936],[-4.5664,40.9562],[-4.6067,40.9708],[-4.6395,41.0301],[-4.7032,41.0524],[-4.7091,41.0854],[-4.7171,41.0892],[-4.7221,41.1493],[-4.6806,41.1857],[-4.6364,41.1906],[-4.6239,41.2343],[-4.4959,41.3639],[-4.5153,41.3941],[-4.4106,41.4416],[-4.3317,41.445],[-4.3204,41.4484],[-4.2335,41.4557],[-4.1583,41.4821],[-4.1345,41.4778],[-3.9991,41.5167],[-3.9807,41.5834],[-3.9145,41.5635],[-3.8637,41.529],[-3.8239,41.4811],[-3.8006,41.5211],[-3.7715,41.5223],[-3.7698,41.4602],[-3.7324,41.4699],[-3.7283,41.5176],[-3.6453,41.5721],[-3.5416,41.5776],[-3.5349,41.5487],[-3.4797,41.5209],[-3.4205,41.5121],[-3.424,41.4827],[-3.346,41.4585],[-3.3472,41.397],[-3.3292,41.3763],[-3.2074,41.3042],[-3.2543,41.2584],[-3.3995,41.2545],[-3.4025,41.2136],[-3.4442,41.2153],[-3.4702,41.1839],[-3.5827,41.1614],[-3.634,41.1349],[-3.6795,41.0842],[-3.7304,41.0615],[-3.7819,41.0002],[-3.8794,40.9753],[-3.9527,40.8939],[-3.9466,40.8648],[-3.9797,40.7998],[-4.0195,40.7813],[-4.0702,40.7939],[-4.1603,40.6899]]]},"properties":{"Codigo":"40","Texto":"Segovia","Texto_Alt":"Segovia","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-3.5416,41.5776],[-3.5397,41.6076],[-3.4685,41.589],[-3.4592,41.5896],[-3.4071,41.6759],[-3.3584,41.6934],[-3.3544,41.7373],[-3.2795,41.7727],[-3.2836,41.7782],[-3.279,41.8679],[-3.1387,41.8123],[-3.0877,41.8763],[-3.0168,41.8869],[-3.0081,41.9222],[-2.9136,42.0229],[-2.8838,42.0095],[-2.798,42.0468],[-2.7916,42.1088],[-2.7347,42.125],[-2.7084,42.0863],[-2.7574,42.0331],[-2.6736,41.9981],[-2.5799,41.9963],[-2.552,42.0456],[-2.5149,42.0689],[-2.5147,42.1145],[-2.4586,42.1153],[-2.4378,42.1373],[-2.3182,42.1452],[-2.2378,42.1022],[-2.1367,42.1031],[-2.1619,42.0667],[-2.117,42.0215],[-2.11,41.9579],[-2.0283,41.9534],[-1.9841,41.9201],[-1.9406,41.9255],[-1.8565,41.9664],[-1.8573,41.9095],[-1.8226,41.8654],[-1.8186,41.83],[-1.8529,41.7896],[-1.8253,41.7784],[-1.7754,41.7248],[-1.8131,41.6606],[-1.859,41.6615],[-1.9231,41.5983],[-1.9932,41.6005],[-1.9673,41.5461],[-1.9811,41.4864],[-1.9533,41.4625],[-1.9537,41.4086],[-2.0293,41.3842],[-2.0356,41.4269],[-2.1015,41.4458],[-2.1258,41.3696],[-2.1705,41.3188],[-2.1462,41.1844],[-2.0799,41.171],[-2.0517,41.1468],[-2.0656,41.0958],[-2.1434,41.1026],[-2.1753,41.0838],[-2.2321,41.097],[-2.2635,41.0675],[-2.3234,41.0565],[-2.3553,41.0865],[-2.4021,41.0617],[-2.4695,41.0781],[-2.4823,41.1163],[-2.5174,41.1479],[-2.5813,41.1408],[-2.5775,41.1787],[-2.6548,41.2407],[-2.7609,41.274],[-2.7832,41.2539],[-2.8669,41.2745],[-2.8755,41.3214],[-2.9067,41.3276],[-2.9441,41.2975],[-3.0619,41.2734],[-3.2074,41.3042],[-3.3292,41.3763],[-3.3472,41.397],[-3.346,41.4585],[-3.424,41.4827],[-3.4205,41.5121],[-3.4797,41.5209],[-3.5349,41.5487],[-3.5416,41.5776]]]},"properties":{"Codigo":"42","Texto":"Soria","Texto_Alt":"Soria","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"MultiPolygon","coordinates":[[[[-4.7221,41.1493],[-4.7862,41.1436],[-4.828,41.0992],[-4.8637,41.094],[-4.9897,41.1608],[-5.0599,41.1386],[-5.1249,41.132],[-5.1283,41.1336],[-5.1364,41.1412],[-5.2308,41.19],[-5.2388,41.1939],[-5.2719,41.198],[-5.274,41.1972],[-5.2887,41.182],[-5.3027,41.2241],[-5.2973,41.2923],[-5.3221,41.3263],[-5.3392,41.4256],[-5.3362,41.4757],[-5.2619,41.5037],[-5.2289,41.5284],[-5.2931,41.5744],[-5.2775,41.6051],[-5.3289,41.6159],[-5.3274,41.6805],[-5.3914,41.7605],[-5.3415,41.7892],[-5.3291,41.789],[-5.3042,41.8267],[-5.3077,41.8257],[-5.3115,41.8823],[-5.2937,41.9199],[-5.3124,41.9495],[-5.2806,41.9788],[-5.3233,42.0189],[-5.3763,42.0415],[-5.3715,42.1301],[-5.3889,42.1725],[-5.3881,42.2214],[-5.3121,42.1998],[-5.2656,42.2109],[-5.2447,42.2639],[-5.1979,42.2605],[-5.0938,42.3093],[-5.0021,42.2891],[-5.0247,42.2199],[-5.027,42.1539],[-4.9275,42.1502],[-4.9168,42.0783],[-4.9497,42.051],[-5.0049,41.9379],[-4.8898,41.9328],[-4.8383,41.8985],[-4.7892,41.818],[-4.6697,41.9005],[-4.5838,41.824],[-4.5121,41.8233],[-4.4784,41.8433],[-4.4733,41.843],[-4.4937,41.7804],[-4.4501,41.7584],[-4.404,41.7832],[-4.3259,41.768],[-4.2866,41.7749],[-4.2363,41.8114],[-4.1507,41.7989],[-4.1003,41.7747],[-4.0409,41.7684],[-4.0529,41.7196],[-4.026,41.6924],[-4.0304,41.6305],[-3.9807,41.5834],[-3.9991,41.5167],[-4.1345,41.4778],[-4.1583,41.4821],[-4.2335,41.4557],[-4.3204,41.4484],[-4.3317,41.445],[-4.4106,41.4416],[-4.5153,41.3941],[-4.4959,41.3639],[-4.6239,41.2343],[-4.6364,41.1906],[-4.6806,41.1857],[-4.7221,41.1493]]],[[[-5.5209,42.0971],[-5.4809,42.0524],[-5.4216,42.0307],[-5.447,41.9729],[-5.5077,42.0575],[-5.5209,42.0971]]]]},"properties":{"Codigo":"47","Texto":"Valladolid","Texto_Alt":"Valladolid","Cod_CCAA":"07","CCAA":"Castilla y León"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-5.4216,42.0307],[-5.3763,42.0415],[-5.3233,42.0189],[-5.2806,41.9788],[-5.3124,41.9495],[-5.2937,41.9199],[-5.3115,41.8823],[-5.3077,41.8257],[-5.3042,41.8267],[-5.3291,41.789],[-5.3415,41.7892],[-5.3914,41.7605],[-5.3274,41.6805],[-5.3289,41.6159],[-5.2775,41.6051],[-5.2931,41.5744],[-5.2289,41.5284],[-5.2619,41.5037],[-5.3362,41.4757],[-5.3392,41.4256],[-5.3221,41.3263],[-5.2973,41.2923],[-5.3027,41.2241],[-5.2887,41.182],[-5.2979,41.1259],[-5.4002,41.1454],[-5.4076,41.1856],[-5.4966,41.1773],[-5.555,41.2138],[-5.5879,41.2024],[-5.6789,41.2319],[-5.7644,41.2161],[-5.8352,41.2203],[-5.8977,41.2386],[-5.9213,41.2182],[-5.9131,41.1783],[-5.9632,41.146],[-6.0026,41.1531],[-6.0088,41.2005],[-6.1093,41.2126],[-6.1345,41.1904],[-6.3723,41.2863],[-6.3914,41.2789],[-6.4797,41.2943],[-6.4381,41.3053],[-6.394,41.3708],[-6.3158,41.39],[-6.328,41.4157],[-6.2834,41.48],[-6.1893,41.575],[-6.2535,41.6331],[-6.3022,41.6627],[-6.3568,41.677],[-6.4484,41.6839],[-6.5121,41.6612],[-6.5482,41.6856],[-6.565,41.7515],[-6.5436,41.7878],[-6.5179,41.8754],[-6.5712,41.8836],[-6.5486,41.9239],[-6.5994,41.9482],[-6.6993,41.9333],[-6.7506,41.9434],[-6.7687,41.9839],[-6.8115,41.9925],[-6.8212,41.9463],[-6.9443,41.9451],[-6.9912,41.984],[-6.9664,42.0238],[-7.0118,42.0524],[-6.9864,42.1242],[-6.9446,42.1417],[-6.9383,42.1774],[-6.8869,42.2144],[-6.7843,42.2536],[-6.7038,42.2094],[-6.6386,42.2173],[-6.6133,42.2032],[-6.526,42.2034],[-6.4976,42.182],[-6.4279,42.2019],[-6.3295,42.1999],[-6.252,42.1731],[-6.2124,42.1481],[-6.1055,42.162],[-6.0288,42.1576],[-5.9535,42.1237],[-5.9116,42.1406],[-5.8381,42.1188],[-5.7595,42.1344],[-5.7429,42.1133],[-5.6434,42.131],[-5.6053,42.0806],[-5.5973,42.0794],[-5.5528,42.0637],[-5.5209,42.0971],[-5.5077,42.0575],[-5.447,41.9729],[-5.4216,42.0307]]]},"properties":{"Codigo":"49","Texto":"Zamora","Texto_Alt":"Zamora","Cod_CCAA":"07","CCAA":"Castilla y León"}}]};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = window.EDO_DATA;
+  var GEO = window.CYL_GEO;
+  var provinces = DATA.provinces;         // 9 names, index-aligned with GEO features by name
+  var diseases = DATA.diseases;           // 78 names
+  var years = DATA.years;                 // [2008..2024]
+
+  // ---- notable diseases for quick picks (must exist in dataset) ----
+  var QUICK = ["Tos Ferina","Sarampión","Tuberculosis (cualquier localización)","Sífilis","Varicela","Nuevas infecciones por VIH/Sida"].filter(function(n){ return diseases.indexOf(n) > -1; });
+
+  var state = {
+    diseaseIdx: null,   // no disease preselected — the user searches or picks one
+    year: 2024,
+    metric: "tasa",  // 'tasa' | 'casos'
+    pinned: null,    // province index
+    hovered: null,   // province index
+    playing: false,
+    playTimer: null
+  };
+
+  function seriesFor(diseaseIdx){ return DATA.series[String(diseaseIdx)] || {}; }
+  function yearsFor(diseaseIdx){
+    var s = seriesFor(diseaseIdx);
+    return Object.keys(s).map(Number).sort(function(a,b){ return a-b; });
+  }
+  function rowsFor(diseaseIdx, year){
+    var s = seriesFor(diseaseIdx);
+    return s[String(year)] || null; // array of [casos,tasa] x9, or null
+  }
+  function valueAt(rows, provIdx){
+    if(!rows) return null;
+    var pair = rows[provIdx];
+    if(!pair) return null;
+    return state.metric === "tasa" ? pair[1] : pair[0];
+  }
+
+  // ---------- Sequential color ramp ----------
+  var LIGHT_RAMP = ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"];
+  var DARK_RAMP = LIGHT_RAMP.slice().reverse();
+  function isDarkMode(){
+    var root = document.documentElement;
+    if(root.getAttribute("data-theme") === "dark") return true;
+    if(root.getAttribute("data-theme") === "light") return false;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function rampFor(){ return isDarkMode() ? DARK_RAMP : LIGHT_RAMP; }
+  function makeColorScale(maxVal){
+    var ramp = rampFor();
+    var n = ramp.length;
+    var domain = ramp.map(function(_, i){ return maxVal <= 0 ? 0 : (maxVal * i / (n-1)); });
+    return d3.scaleLinear().domain(domain).range(ramp).clamp(true);
+  }
+  function zeroSwatch(){
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue("--seq-0").trim();
+  }
+  function fmt(n, decimals){
+    if(n === null || n === undefined) return "—";
+    var opts = { minimumFractionDigits: decimals||0, maximumFractionDigits: decimals||0 };
+    return new Intl.NumberFormat("es-ES", opts).format(n);
+  }
+
+  // ---------- Build disease datalist + quick picks ----------
+  var diseaseList = document.getElementById("diseaseList");
+  diseases.forEach(function(name){
+    var opt = document.createElement("option");
+    opt.value = name;
+    diseaseList.appendChild(opt);
+  });
+  var diseaseInput = document.getElementById("diseaseInput");
+  var clearBtn = document.getElementById("clearDisease");
+  diseaseInput.value = "";
+  diseaseInput.addEventListener("change", function(){
+    var v = diseaseInput.value.trim();
+    if(v === ""){ clearDisease(); return; }
+    var idx = diseases.indexOf(v);
+    if(idx === -1){
+      diseaseInput.value = state.diseaseIdx !== null ? diseases[state.diseaseIdx] : "";
+      return;
+    }
+    setDisease(idx);
+  });
+  clearBtn.addEventListener("click", function(){ clearDisease(); diseaseInput.focus(); });
+
+  var quickPicksEl = document.getElementById("quickPicks");
+  var quickPickBtns = [];
+  QUICK.forEach(function(name){
+    var idx = diseases.indexOf(name);
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "quick-pick"; btn.textContent = name.length > 26 ? name.slice(0,24)+"…" : name;
+    btn.title = name; btn.dataset.idx = idx;
+    btn.addEventListener("click", function(){ setDisease(idx); });
+    quickPicksEl.appendChild(btn);
+    quickPickBtns.push(btn);
+  });
+
+  function syncQuickPicks(){
+    quickPickBtns.forEach(function(btn){
+      btn.classList.toggle("active", state.diseaseIdx !== null && Number(btn.dataset.idx) === state.diseaseIdx);
+    });
+  }
+
+  function setDisease(idx){
+    state.diseaseIdx = idx;
+    diseaseInput.value = diseases[idx];
+    clearBtn.hidden = false;
+    syncQuickPicks();
+    var avail = yearsFor(idx);
+    if(avail.indexOf(state.year) === -1){
+      state.year = avail[avail.length-1];
+    }
+    configureYearSlider();
+    renderAll();
+  }
+
+  function clearDisease(){
+    state.diseaseIdx = null;
+    diseaseInput.value = "";
+    clearBtn.hidden = true;
+    syncQuickPicks();
+    configureYearSlider();
+    renderAll();
+  }
+
+  // ---------- Metric toggle ----------
+  var segBtns = Array.prototype.slice.call(document.querySelectorAll(".seg-btn"));
+  segBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      segBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.metric = btn.getAttribute("data-metric");
+      renderAll();
+    });
+  });
+
+  // ---------- Year slider ----------
+  var yearSlider = document.getElementById("yearSlider");
+  var yearValueEl = document.getElementById("yearValue");
+  var yearTicksEl = document.getElementById("yearTicks");
+  var playBtn = document.getElementById("playBtn");
+  var currentAvailYears = years;
+
+  function configureYearSlider(){
+    currentAvailYears = state.diseaseIdx === null ? years.slice() : yearsFor(state.diseaseIdx);
+    yearSlider.min = 0;
+    yearSlider.max = currentAvailYears.length - 1;
+    yearSlider.value = currentAvailYears.indexOf(state.year);
+    yearValueEl.textContent = state.year;
+    yearTicksEl.innerHTML = "";
+    var first = document.createElement("span"); first.textContent = currentAvailYears[0];
+    var last = document.createElement("span"); last.textContent = currentAvailYears[currentAvailYears.length-1];
+    yearTicksEl.appendChild(first); yearTicksEl.appendChild(last);
+  }
+  yearSlider.addEventListener("input", function(){
+    state.year = currentAvailYears[Number(yearSlider.value)];
+    yearValueEl.textContent = state.year;
+    renderAll();
+  });
+  playBtn.addEventListener("click", function(){
+    state.playing = !state.playing;
+    playBtn.classList.toggle("playing", state.playing);
+    playBtn.textContent = state.playing ? "❚❚" : "▶";
+    if(state.playing){
+      state.playTimer = setInterval(function(){
+        var i = currentAvailYears.indexOf(state.year);
+        i = (i + 1) % currentAvailYears.length;
+        state.year = currentAvailYears[i];
+        yearSlider.value = i;
+        yearValueEl.textContent = state.year;
+        renderAll();
+      }, 900);
+    } else {
+      clearInterval(state.playTimer);
+    }
+  });
+
+  // ---------- Map (D3 geo) ----------
+  var mapSvg = d3.select("#mapSvg");
+  var mapW = 600, mapH = 480;
+  var projection = d3.geoMercator().fitSize([mapW - 20, mapH - 20], GEO);
+  projection.translate([projection.translate()[0] + 10, projection.translate()[1] + 10]);
+  var pathGen = d3.geoPath(projection);
+
+  var mapG = mapSvg.append("g");
+  var provPaths = mapG.selectAll("path.province-path")
+    .data(GEO.features)
+    .enter().append("path")
+    .attr("class", "province-path")
+    .attr("d", pathGen)
+    .attr("data-name", function(f){ return f.properties.Texto; });
+
+  var labelG = mapG.selectAll("text.province-label")
+    .data(GEO.features)
+    .enter().append("text")
+    .attr("class", "province-label")
+    .attr("x", function(f){ return pathGen.centroid(f)[0]; })
+    .attr("y", function(f){ return pathGen.centroid(f)[1]; })
+    .attr("text-anchor", "middle")
+    .text(function(f){ return f.properties.Texto; });
+
+  var tooltip = document.getElementById("tooltip");
+  function showTooltip(evt, provIdx){
+    var html;
+    if(state.diseaseIdx === null){
+      html = '<div class="tt-title">' + provinces[provIdx] + '</div>' +
+        '<div class="tt-row"><span>Elige una enfermedad para ver sus datos</span></div>';
+    } else {
+      var rows = rowsFor(state.diseaseIdx, state.year);
+      var pair = rows ? rows[provIdx] : null;
+      html = '<div class="tt-title">' + provinces[provIdx] + '</div>' +
+        '<div class="tt-row"><span>Casos</span><b>' + (pair ? fmt(pair[0]) : "—") + '</b></div>' +
+        '<div class="tt-row"><span>Tasa /100.000</span><b>' + (pair ? fmt(pair[1],2) : "—") + '</b></div>';
+    }
+    tooltip.innerHTML = html;
+    tooltip.hidden = false;
+    tooltip.style.left = evt.clientX + "px";
+    tooltip.style.top = evt.clientY + "px";
+  }
+  function hideTooltip(){ tooltip.hidden = true; }
+
+  provPaths
+    .on("mousemove", function(evt, f){
+      var provIdx = provinces.indexOf(f.properties.Texto);
+      state.hovered = provIdx;
+      showTooltip(evt, provIdx);
+      highlightTrend();
+    })
+    .on("mouseleave", function(){
+      state.hovered = null;
+      hideTooltip();
+      highlightTrend();
+    })
+    .on("click", function(evt, f){
+      var provIdx = provinces.indexOf(f.properties.Texto);
+      state.pinned = (state.pinned === provIdx) ? null : provIdx;
+      renderAll();
+    });
+
+  // ---------- Legend ----------
+  var legendEl = document.getElementById("legend");
+
+  // ---------- Bars ----------
+  var barsEl = document.getElementById("bars");
+
+  // ---------- KPIs ----------
+  var kpiEl = document.getElementById("kpiRow");
+
+  // ---------- Trend line chart ----------
+  var lineSvg = d3.select("#lineSvg");
+  var lineW = 940, lineH = 320;
+  var lineMargin = { top: 16, right: 18, bottom: 26, left: 46 };
+  var lineInnerW = lineW - lineMargin.left - lineMargin.right;
+  var lineInnerH = lineH - lineMargin.top - lineMargin.bottom;
+  var lineG = lineSvg.append("g").attr("transform", "translate(" + lineMargin.left + "," + lineMargin.top + ")");
+  var gridG = lineG.append("g").attr("class", "trend-grid");
+  var axisG = lineG.append("g").attr("class", "trend-axis");
+  var linesG = lineG.append("g").attr("class", "trend-lines");
+  var dotG = lineG.append("g").attr("class", "trend-dots");
+
+  var chipsEl = document.getElementById("provinceChips");
+  provinces.forEach(function(name, idx){
+    var chip = document.createElement("button");
+    chip.type = "button"; chip.className = "chip"; chip.textContent = name;
+    chip.addEventListener("click", function(){
+      state.pinned = (state.pinned === idx) ? null : idx;
+      renderAll();
+    });
+    chipsEl.appendChild(chip);
+  });
+
+  function highlightTrend(){
+    var active = state.pinned !== null ? state.pinned : state.hovered;
+    linesG.selectAll("path").classed("is-active", function(d){ return d.idx === active; });
+    dotG.selectAll("g.dotgroup").classed("is-active", function(d){ return d.idx === active; });
+    Array.prototype.forEach.call(chipsEl.children, function(chip, i){
+      chip.classList.toggle("is-pinned", state.pinned === i);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".bar-row"), function(row){
+      row.classList.toggle("is-pinned", state.pinned !== null && Number(row.dataset.idx) === state.pinned);
+    });
+    provPaths.classed("is-pinned", function(f){ return provinces.indexOf(f.properties.Texto) === state.pinned; });
+  }
+
+  // ---------- Master render ----------
+  function renderAll(){
+    if(state.diseaseIdx === null){
+      renderEmptyState();
+      return;
+    }
+    var rows = rowsFor(state.diseaseIdx, state.year);
+    var diseaseName = diseases[state.diseaseIdx];
+    var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
+
+    document.getElementById("mapSub").textContent = diseaseName + " · " + state.year + " · " + metricLabel;
+    document.getElementById("rankSub").textContent = "Provincias ordenadas por " + metricLabel + ", " + state.year + ".";
+
+    if(!rows){
+      mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
+      legendEl.innerHTML = '<p class="empty-note">No hay datos de «' + diseaseName + '» para ' + state.year + '.</p>';
+      barsEl.innerHTML = '<p class="empty-note">Sin datos para este año.</p>';
+      renderKPIs(null, diseaseName);
+      renderTrend(diseaseName);
+      return;
+    }
+
+    var values = provinces.map(function(_, i){ return valueAt(rows, i); });
+    var maxVal = Math.max.apply(null, values.filter(function(v){ return v !== null; }).concat([0]));
+    var colorScale = makeColorScale(maxVal || 1);
+    var zeroC = zeroSwatch();
+
+    function colorForIdx(i){
+      var v = values[i];
+      if(v === null) return zeroC;
+      if(v === 0) return zeroC;
+      return colorScale(v);
+    }
+
+    provPaths.attr("fill", function(f){
+      var i = provinces.indexOf(f.properties.Texto);
+      return colorForIdx(i);
+    });
+
+    // legend
+    var ramp = rampFor();
+    var gradId = "seqGrad";
+    var stops = ramp.map(function(c, i){ return c + " " + (i/(ramp.length-1)*100) + "%"; }).join(", ");
+    legendEl.innerHTML =
+      '<div class="legend-bar" style="background: linear-gradient(90deg, ' + stops + ');"></div>' +
+      '<div class="legend-ticks"><span>0' + (state.metric==='tasa' ? '' : ' casos') + '</span><span>' + fmt(maxVal, state.metric==='tasa'?1:0) + (state.metric==='tasa' ? ' /100.000' : ' casos') + '</span></div>' +
+      '<div class="legend-foot"><span class="legend-zero-swatch"></span><span>Sin casos declarados</span></div>';
+
+    // bars (ranking)
+    var order = provinces.map(function(_, i){ return i; })
+      .filter(function(i){ return values[i] !== null; })
+      .sort(function(a,b){ return values[b]-values[a]; });
+    barsEl.innerHTML = "";
+    order.forEach(function(i){
+      var row = document.createElement("div");
+      row.className = "bar-row"; row.dataset.idx = i;
+      var pct = maxVal > 0 ? (values[i]/maxVal*100) : 0;
+      row.innerHTML =
+        '<span class="bar-name">' + provinces[i] + '</span>' +
+        '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%; background:' + colorForIdx(i) + ';"></span></span>' +
+        '<span class="bar-value">' + fmt(values[i], state.metric==='tasa'?1:0) + '</span>';
+      row.addEventListener("mouseenter", function(){ state.hovered = i; highlightTrend(); });
+      row.addEventListener("mouseleave", function(){ state.hovered = null; highlightTrend(); });
+      row.addEventListener("click", function(){ state.pinned = (state.pinned===i) ? null : i; renderAll(); });
+      barsEl.appendChild(row);
+    });
+
+    renderKPIs(rows, diseaseName, values, maxVal);
+    renderTrend(diseaseName);
+    highlightTrend();
+  }
+
+  function renderEmptyState(){
+    document.getElementById("mapSub").textContent = "Elige o busca una enfermedad para ver el mapa.";
+    document.getElementById("rankSub").textContent = "Elige una enfermedad para ver el ranking provincial.";
+    document.getElementById("trendSub").textContent = "Elige una enfermedad para ver su evolución 2008–2024.";
+    mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
+    legendEl.innerHTML = '<p class="empty-note">Busca o elige una enfermedad para activar la leyenda.</p>';
+    barsEl.innerHTML = '<p class="empty-note">Busca o elige una enfermedad para ver el ranking de provincias.</p>';
+    kpiEl.innerHTML = '<div class="kpi-tile kpi-tile-wide"><span class="kpi-label">Para empezar</span>' +
+      '<span class="kpi-empty-msg">Busca una enfermedad de declaración obligatoria (p. ej. «Sarampión» o «Tuberculosis») o elige una de las sugerencias, para ver sus casos y tasas por provincia.</span></div>';
+    linesG.selectAll("*").remove();
+    dotG.selectAll("*").remove();
+    gridG.selectAll("*").remove();
+    axisG.selectAll("*").remove();
+    highlightTrend();
+  }
+
+  function renderKPIs(rows, diseaseName, values, maxVal){
+    if(!rows){
+      kpiEl.innerHTML = "";
+      return;
+    }
+    var totalCasos = rows.reduce(function(s,p){ return s + (p ? p[0] : 0); }, 0);
+    var tasas = rows.map(function(p){ return p ? p[1] : null; }).filter(function(v){ return v !== null; });
+    var meanTasa = tasas.length ? tasas.reduce(function(a,b){ return a+b; },0)/tasas.length : null;
+    var topIdx = values.indexOf(maxVal);
+    var topLabel = state.metric === "tasa" ? "mayor tasa" : "más casos";
+
+    // interannual variation on total casos
+    var prevYear = state.year - 1;
+    var prevRows = rowsFor(state.diseaseIdx, prevYear);
+    var deltaHtml = "—";
+    if(prevRows){
+      var prevTotal = prevRows.reduce(function(s,p){ return s + (p ? p[0] : 0); }, 0);
+      if(prevTotal > 0){
+        var pct = (totalCasos - prevTotal) / prevTotal * 100;
+        var sign = pct > 0 ? "+" : "";
+        var cls = pct > 0 ? "kpi-delta-up" : (pct < 0 ? "kpi-delta-down" : "");
+        deltaHtml = '<span class="' + cls + '">' + sign + fmt(pct,1) + '%</span>';
+      } else if(totalCasos > 0) {
+        deltaHtml = '<span class="kpi-delta-up">nuevo</span>';
+      } else {
+        deltaHtml = "0%";
+      }
+    }
+
+    var tiles = [
+      { label: "Casos totales · CyL", value: fmt(totalCasos), unit: state.year, sub: diseaseName.length>34?diseaseName.slice(0,32)+"…":diseaseName },
+      { label: "Tasa media provincial", value: meanTasa!==null ? fmt(meanTasa,1) : "—", unit: "/100.000 hab.", sub: "media simple de las 9 provincias" },
+      { label: "Provincia con " + topLabel, value: topIdx>-1 ? provinces[topIdx] : "—", unit:"", sub: topIdx>-1 ? fmt(values[topIdx], state.metric==='tasa'?1:0) + (state.metric==='tasa'?" /100.000":" casos") : "" },
+      { label: "Variación interanual", value: deltaHtml, unit:"", sub: "casos totales vs. " + prevYear, isHtml:true }
+    ];
+    kpiEl.innerHTML = tiles.map(function(t){
+      return '<div class="kpi-tile"><span class="kpi-label">' + t.label + '</span>' +
+        '<span class="kpi-value">' + (t.isHtml ? t.value : t.value) + (t.unit ? '<span class="unit">' + t.unit + '</span>' : '') + '</span>' +
+        '<span class="kpi-sub">' + t.sub + '</span></div>';
+    }).join("");
+  }
+
+  function renderTrend(diseaseName){
+    var avail = yearsFor(state.diseaseIdx);
+    document.getElementById("trendSub").textContent =
+      (avail.length ? ("Serie " + avail[0] + "–" + avail[avail.length-1] + " para " + diseaseName + ". ") : "") +
+      "Pasa el cursor por el mapa o el ranking, o pulsa una provincia para fijarla.";
+
+    if(avail.length < 2){
+      linesG.selectAll("*").remove(); dotG.selectAll("*").remove(); gridG.selectAll("*").remove(); axisG.selectAll("*").remove();
+      return;
+    }
+    var xScale = d3.scaleLinear().domain([avail[0], avail[avail.length-1]]).range([0, lineInnerW]);
+    var allVals = [];
+    var series = provinces.map(function(name, pi){
+      var pts = avail.map(function(y){
+        var rows = rowsFor(state.diseaseIdx, y);
+        var v = rows ? valueAt(rows, pi) : null;
+        if(v !== null) allVals.push(v);
+        return { year: y, v: v };
+      }).filter(function(p){ return p.v !== null; });
+      return { idx: pi, name: name, pts: pts };
+    });
+    var maxV = Math.max.apply(null, allVals.concat([1]));
+    var yScale = d3.scaleLinear().domain([0, maxV * 1.08]).range([lineInnerH, 0]);
+
+    // grid + axes
+    var yTicks = yScale.ticks(4);
+    gridG.selectAll("line").data(yTicks).join("line")
+      .attr("x1", 0).attr("x2", lineInnerW)
+      .attr("y1", function(d){ return yScale(d); }).attr("y2", function(d){ return yScale(d); });
+    axisG.selectAll(".ytick").data(yTicks).join(
+      function(enter){ return enter.append("text").attr("class","ytick"); }
+    ).attr("x", -8).attr("y", function(d){ return yScale(d)+3; }).attr("text-anchor","end")
+      .text(function(d){ return fmt(d, state.metric==='tasa'?1:0); });
+
+    var xTickYears = avail.filter(function(y){ return y % 2 === (avail[avail.length-1] % 2); });
+    axisG.selectAll(".xtick").data(xTickYears).join(
+      function(enter){ return enter.append("text").attr("class","xtick"); }
+    ).attr("x", function(d){ return xScale(d); }).attr("y", lineInnerH + 18).attr("text-anchor","middle")
+      .text(function(d){ return d; });
+    axisG.selectAll(".xaxisline").data([0]).join(
+      function(enter){ return enter.append("line").attr("class","xaxisline"); }
+    ).attr("x1",0).attr("x2",lineInnerW).attr("y1",lineInnerH).attr("y2",lineInnerH);
+
+    var lineGen = d3.line().x(function(d){ return xScale(d.year); }).y(function(d){ return yScale(d.v); }).curve(d3.curveMonotoneX);
+
+    linesG.selectAll("path").data(series, function(d){ return d.idx; }).join("path")
+      .attr("class","trend-line")
+      .attr("d", function(d){ return lineGen(d.pts); });
+
+    dotG.selectAll("g.dotgroup").data(series, function(d){ return d.idx; }).join(
+      function(enter){ return enter.append("g").attr("class","dotgroup"); }
+    ).each(function(d){
+      var g = d3.select(this);
+      var last = d.pts[d.pts.length-1];
+      g.selectAll("circle").data(last ? [last] : []).join("circle")
+        .attr("class","trend-dot")
+        .attr("cx", function(p){ return xScale(p.year); })
+        .attr("cy", function(p){ return yScale(p.v); })
+        .attr("r", 3);
+    });
+
+    highlightTrend();
+  }
+
+  configureYearSlider();
+  renderAll();
+})();
+</script>
+</body>
+</html>
