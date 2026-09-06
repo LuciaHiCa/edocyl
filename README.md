@@ -11,7 +11,9 @@ Enfermedades de Declaración Obligatoria (EDO)** en Castilla y León.
 
 ## Estado
 Dashboard funcional publicado en **GitHub Pages** (URL pública del concurso):
-**https://__USUARIO__.github.io/edocyl/**
+**https://luciahica.github.io/edocyl/**
+Repo: https://github.com/LuciaHiCa/edocyl (público — requisito de Pages en plan
+gratuito; el contenido es CC BY 4.0 de la JCyL, nada sensible).
 
 > El primer despliegue fue un Claude Artifact
 > (`4f40942a-7f4d-4427-8acb-b0836cf166b5`), pero quedó ligado a la cuenta del
