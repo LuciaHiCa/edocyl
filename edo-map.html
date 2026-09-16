@@ -131,14 +131,17 @@
   .quick-pick:hover{ border-color: var(--accent); color: var(--accent); }
   .quick-pick.active{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
-  /* -- secondary controls: metric + year -- */
-  .secondary-controls{
-    display:grid; grid-template-columns: 1fr 1.6fr; gap: 20px;
-    padding-top:16px; border-top:1px solid var(--border);
+  /* -- map + its controls side by side -- */
+  .map-layout{ display:grid; grid-template-columns: minmax(0,1.45fr) minmax(0,1fr); gap:26px; align-items:start; }
+  @media (max-width: 900px){ .map-layout{ grid-template-columns: 1fr; gap:22px; } }
+  .map-figure{ min-width:0; }
+  .map-controls{
+    display:flex; flex-direction:column; gap:20px; min-width:0;
+    padding:16px 18px; border:1px solid var(--border); border-radius:12px;
+    background: var(--surface-raised);
   }
-  @media (max-width: 800px){ .secondary-controls{ grid-template-columns: 1fr; } }
 
-  .segmented{ display:flex; border:1px solid var(--border-strong); border-radius:9px; overflow:hidden; width:fit-content; }
+  .segmented{ display:flex; border:1px solid var(--border-strong); border-radius:9px; overflow:hidden; width:fit-content; max-width:100%; }
   .seg-btn{
     font: inherit; font-size:13px; padding:8px 13px; border:none; background: var(--surface-raised);
     color: var(--text-secondary); cursor:pointer; border-right:1px solid var(--border);
@@ -201,9 +204,6 @@
   .kpi-empty-msg{ font-size:14px; color: var(--text-secondary); font-weight:400; font-family: var(--font-sans); }
 
   /* ---------- Main grid: map + ranking ---------- */
-  .main-grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap:18px; align-items:start; }
-  @media (max-width: 900px){ .main-grid{ grid-template-columns: 1fr; } }
-
   #mapSvg{ width:100%; height:auto; display:block; }
   .province-path{ stroke: var(--surface); stroke-width:1.6; cursor:pointer; transition: filter .12s ease; }
   .province-path:hover{ filter: brightness(1.06); }
@@ -337,7 +337,7 @@
       <p class="lede">Explora los casos declarados y las tasas por 100.000 habitantes de 2008 a 2024 por año y provincia a través de un mapa interactivo, gráficos de evolución histórica y un ranking provincial.</p>
     </header>
 
-    <section class="controls" aria-label="Filtros">
+    <section class="controls" aria-label="Buscar enfermedad">
       <div class="search-block">
         <label for="diseaseInput" class="search-label">Buscar una enfermedad de declaración obligatoria</label>
         <div class="search-wrap">
@@ -351,55 +351,58 @@
           <div class="quick-picks" id="quickPicks"></div>
         </div>
       </div>
-      <div class="secondary-controls">
-        <div class="control-group metric-control">
-          <span class="control-label">Indicador</span>
-          <div class="segmented" role="group" aria-label="Indicador">
-            <button type="button" data-metric="tasa" class="seg-btn active">Tasa /100.000 hab.</button>
-            <button type="button" data-metric="casos" class="seg-btn">Casos</button>
-          </div>
-        </div>
-        <div class="control-group year-control">
-          <div class="year-head">
-            <span class="control-label">Año</span>
-            <span id="yearValue" class="year-value">2024</span>
-          </div>
+    </section>
 
-          <div class="year-sub">
-            <span class="year-sub-label">Reproducir</span>
-            <button id="playBtn" type="button" class="play-toggle" aria-pressed="false">
-              <span class="play-ico" aria-hidden="true">▶</span><span id="playLabel">Ver evolución temporal en mapa 2008–2024</span>
-            </button>
-            <div class="play-progress" id="playProgress" hidden><span></span></div>
-          </div>
-
-          <div class="year-sub">
-            <span class="year-sub-label">Selección de año</span>
-            <span class="year-note">Elegir año para mostrar el mapa.</span>
-            <div class="year-bar" id="yearBar" role="group" aria-label="Elegir año"></div>
-          </div>
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <h2 id="mapTitle">Mapa de evolución de las enfermedades por año y provincia</h2>
+        <p class="panel-sub" id="mapSub"></p>
+      </div>
+      <div class="map-layout">
+        <div class="map-figure">
+          <svg id="mapSvg" viewBox="0 0 600 480" role="img" aria-labelledby="mapTitle"></svg>
+          <div class="legend" id="legend"></div>
         </div>
+        <aside class="map-controls" aria-label="Controles del mapa">
+          <div class="control-group metric-control">
+            <span class="control-label">Indicador</span>
+            <div class="segmented" role="group" aria-label="Indicador">
+              <button type="button" data-metric="tasa" class="seg-btn active">Tasa /100.000 hab.</button>
+              <button type="button" data-metric="casos" class="seg-btn">Casos</button>
+            </div>
+          </div>
+          <div class="control-group year-control">
+            <div class="year-head">
+              <span class="control-label">Año</span>
+              <span id="yearValue" class="year-value">2024</span>
+            </div>
+
+            <div class="year-sub">
+              <span class="year-sub-label">Selección de año</span>
+              <span class="year-note">Elegir año para mostrar el mapa.</span>
+              <div class="year-bar" id="yearBar" role="group" aria-label="Elegir año"></div>
+            </div>
+
+            <div class="year-sub">
+              <span class="year-sub-label">Reproducir</span>
+              <button id="playBtn" type="button" class="play-toggle" aria-pressed="false">
+                <span class="play-ico" aria-hidden="true">▶</span><span id="playLabel">Ver evolución temporal en mapa 2008–2024</span>
+              </button>
+              <div class="play-progress" id="playProgress" hidden><span></span></div>
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
 
     <section class="kpi-row" id="kpiRow" aria-label="Indicadores clave"></section>
 
-    <section class="main-grid">
-      <div class="panel map-panel">
-        <div class="panel-head">
-          <h2 id="mapTitle">Mapa de evolución de las enfermedades por año y provincia</h2>
-          <p class="panel-sub" id="mapSub"></p>
-        </div>
-        <svg id="mapSvg" viewBox="0 0 600 480" role="img" aria-labelledby="mapTitle"></svg>
-        <div class="legend" id="legend"></div>
+    <section class="panel rank-panel">
+      <div class="panel-head">
+        <h2>Ranking provincial</h2>
+        <p class="panel-sub" id="rankSub"></p>
       </div>
-      <div class="panel rank-panel">
-        <div class="panel-head">
-          <h2>Ranking provincial</h2>
-          <p class="panel-sub" id="rankSub"></p>
-        </div>
-        <div class="bars" id="bars"></div>
-      </div>
+      <div class="bars" id="bars"></div>
     </section>
 
     <section class="panel yearmaps-panel">
