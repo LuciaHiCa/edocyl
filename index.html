@@ -245,6 +245,7 @@
   .legend-foot{ display:flex; align-items:center; gap:8px; font-size:11.5px; color: var(--text-secondary); }
   .legend-zero-swatch{ width:12px; height:12px; border-radius:3px; background: var(--seq-0); border:1px solid var(--border); display:inline-block; }
 
+  .rank-metric-control{ margin-bottom:16px; }
   .bars{ display:flex; flex-direction:column; gap:9px; }
   .bar-row{ display:grid; grid-template-columns: 82px 1fr 64px; align-items:center; gap:10px; cursor:pointer; padding:3px 4px; border-radius:6px; }
   .bar-row:hover, .bar-row.is-selected{ background: var(--accent-soft); }
@@ -438,6 +439,13 @@
         <h2>Ranking provincial</h2>
         <p class="panel-sub" id="rankSub"></p>
       </div>
+      <div class="control-group rank-metric-control">
+        <span class="control-label">Indicador</span>
+        <div class="segmented" role="group" aria-label="Indicador del ranking">
+          <button type="button" data-metric="casos" class="seg-btn active">Casos</button>
+          <button type="button" data-metric="tasa" class="seg-btn">Tasa /100.000 hab.</button>
+        </div>
+      </div>
       <div class="bars" id="bars"></div>
     </section>
 
@@ -599,7 +607,8 @@
   var state = {
     diseaseIdx: null,   // no disease preselected — the user searches or picks one
     year: 2008,
-    metric: "casos",  // 'tasa' | 'casos'
+    metric: "casos",      // indicador del mapa: 'tasa' | 'casos'
+    rankMetric: "casos",  // indicador del ranking provincial, independiente del mapa
     selected: [],    // province indices being compared in the trend chart
     hovered: null,   // province index
     playing: false,
@@ -622,11 +631,11 @@
     var s = seriesFor(diseaseIdx);
     return s[String(year)] || null; // array of [casos,tasa] x9, or null
   }
-  function valueAt(rows, provIdx){
+  function valueAt(rows, provIdx, metric){
     if(!rows) return null;
     var pair = rows[provIdx];
     if(!pair) return null;
-    return state.metric === "tasa" ? pair[1] : pair[0];
+    return (metric || state.metric) === "tasa" ? pair[1] : pair[0];
   }
   // A pair with a 3rd element is an estimated 2018 rate (the source publishes it
   // as 0 for 8 of the 9 provinces; recomputed from cases and 2017 population).
@@ -733,16 +742,20 @@
     renderAll();
   }
 
-  // ---------- Metric toggle ----------
-  var segBtns = Array.prototype.slice.call(document.querySelectorAll(".seg-btn"));
-  segBtns.forEach(function(btn){
-    btn.addEventListener("click", function(){
-      segBtns.forEach(function(b){ b.classList.remove("active"); });
-      btn.classList.add("active");
-      state.metric = btn.getAttribute("data-metric");
-      renderAll();
+  // ---------- Metric toggles (mapa y ranking, independientes) ----------
+  function wireMetricToggle(selector, key){
+    var btns = Array.prototype.slice.call(document.querySelectorAll(selector));
+    btns.forEach(function(btn){
+      btn.addEventListener("click", function(){
+        btns.forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        state[key] = btn.getAttribute("data-metric");
+        renderAll();
+      });
     });
-  });
+  }
+  wireMetricToggle(".metric-control .seg-btn", "metric");
+  wireMetricToggle(".rank-metric-control .seg-btn", "rankMetric");
 
   // ---------- Year control: playback + clickable year bar ----------
   var yearValueEl = document.getElementById("yearValue");
@@ -1065,12 +1078,14 @@
     var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
 
     var est2018 = state.metric === "tasa" && state.year === 2018;
+    var rankMetricLabel = state.rankMetric === "tasa" ? "tasa /100.000 hab." : "casos";
+    var estRank2018 = state.rankMetric === "tasa" && state.year === 2018;
     document.getElementById("summarySub").textContent =
       diseaseName + " · Castilla y León · " + state.year;
     document.getElementById("mapSub").textContent =
       diseaseName + " · " + state.year + " · " + metricLabel + (est2018 ? " · tasa estimada" : "");
     document.getElementById("rankSub").textContent =
-      "Provincias ordenadas por " + metricLabel + ", " + state.year + "." + (est2018 ? " " + EST_2018_NOTE : "");
+      "Provincias ordenadas por " + rankMetricLabel + ", " + state.year + "." + (estRank2018 ? " " + EST_2018_NOTE : "");
 
     if(!rows){
       mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
@@ -1108,11 +1123,19 @@
       '<div class="legend-ticks"><span>0' + (state.metric==='tasa' ? '' : ' casos') + '</span><span>' + fmt(maxVal, state.metric==='tasa'?1:0) + (state.metric==='tasa' ? ' /100.000' : ' casos') + '</span></div>' +
       '<div class="legend-foot"><span class="legend-zero-swatch"></span><span>Sin casos declarados</span></div>';
 
-    // bars (ranking) — sorted by the chosen metric, casos as tie-breaker
+    // bars (ranking) — usa su propio indicador, con casos como desempate
+    var rankValues = provinces.map(function(_, i){ return valueAt(rows, i, state.rankMetric); });
+    var rankMax = Math.max.apply(null, rankValues.filter(function(v){ return v !== null; }).concat([0]));
+    var rankScale = makeColorScale(rankMax || 1);
+    function rankColorForIdx(i){
+      var v = rankValues[i];
+      if(v === null || v === 0) return zeroC;
+      return rankScale(v);
+    }
     var order = provinces.map(function(_, i){ return i; })
-      .filter(function(i){ return values[i] !== null; })
+      .filter(function(i){ return rankValues[i] !== null; })
       .sort(function(a,b){
-        var d = values[b] - values[a];
+        var d = rankValues[b] - rankValues[a];
         if(d) return d;
         return (rows[b] ? rows[b][0] : 0) - (rows[a] ? rows[a][0] : 0);
       });
@@ -1120,20 +1143,20 @@
     order.forEach(function(i){
       var row = document.createElement("div");
       row.className = "bar-row"; row.dataset.idx = i;
-      var pct = maxVal > 0 ? (values[i] / maxVal * 100) : 0;
+      var pct = rankMax > 0 ? (rankValues[i] / rankMax * 100) : 0;
       row.innerHTML =
         '<span class="bar-name">' + provinces[i] + '</span>' +
-        '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%; background:' + colorForIdx(i) + ';"></span></span>' +
-        '<span class="bar-value">' + fmt(values[i], state.metric==='tasa'?1:0) + '</span>';
+        '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%; background:' + rankColorForIdx(i) + ';"></span></span>' +
+        '<span class="bar-value">' + fmt(rankValues[i], state.rankMetric==='tasa'?1:0) + '</span>';
       row.addEventListener("mouseenter", function(){ state.hovered = i; highlightTrend(); });
       row.addEventListener("mouseleave", function(){ state.hovered = null; highlightTrend(); });
       row.addEventListener("click", function(){ toggleSelected(i); });
       barsEl.appendChild(row);
     });
-    if(maxVal <= 0){
+    if(rankMax <= 0){
       var note = document.createElement("p");
       note.className = "bars-note";
-      note.textContent = state.metric === "tasa"
+      note.textContent = state.rankMetric === "tasa"
         ? "La fuente publica una tasa de 0,0 en todas las provincias este año (incidencia por debajo de su redondeo). Cambia a «Casos» para comparar."
         : "Sin casos declarados en ninguna provincia este año.";
       barsEl.appendChild(note);
