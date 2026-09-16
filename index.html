@@ -143,8 +143,8 @@
   .seg-btn.active{ background: var(--accent); color: var(--accent-ink); font-weight:600; }
 
   .year-control{ gap:14px; }
-  .year-head{ display:flex; align-items:baseline; gap:10px; }
-  .year-value{ font-family: var(--font-mono); font-size:20px; font-weight:600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .year-sub-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .year-value{ font-family: var(--font-mono); font-size:20px; font-weight:600; color: var(--accent); font-variant-numeric: tabular-nums; line-height:1; }
   .year-sub{ display:flex; flex-direction:column; gap:8px; }
   .year-sub + .year-sub{ padding-top:14px; border-top:1px solid var(--border); }
   .year-sub-label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: var(--text-muted); }
@@ -359,13 +359,11 @@
             </div>
           </div>
           <div class="control-group year-control">
-            <div class="year-head">
-              <span class="control-label">Año</span>
-              <span id="yearValue" class="year-value">2008</span>
-            </div>
-
             <div class="year-sub">
-              <span class="year-sub-label">Selección de año</span>
+              <div class="year-sub-head">
+                <span class="year-sub-label">Selección de año</span>
+                <span id="yearValue" class="year-value">2008</span>
+              </div>
               <span class="year-note">Elegir año para mostrar el mapa.</span>
               <div class="year-bar" id="yearBar" role="group" aria-label="Elegir año"></div>
             </div>
@@ -549,7 +547,11 @@
   var years = DATA.years;                 // [2008..2024]
 
   // ---- notable diseases for quick picks (must exist in dataset) ----
-  var QUICK = ["Tos Ferina","Sarampión","Tuberculosis (cualquier localización)","Sífilis","Varicela","Nuevas infecciones por VIH/Sida"].filter(function(n){ return diseases.indexOf(n) > -1; });
+  var QUICK = ["Gripe","Varicela","Tos Ferina","Sarampión","Parotiditis",
+               "Tuberculosis (cualquier localización)","Sífilis","Infección gonocócica",
+               "Nuevas infecciones por VIH/Sida","Campilobacteriosis",
+               "Salmonelosis de transmisión alimentaria","Legionelosis","Tularemia",
+               "Hepatitis A","Enfermedad meningocócica"].filter(function(n){ return diseases.indexOf(n) > -1; });
 
   var state = {
     diseaseIdx: null,   // no disease preselected — the user searches or picks one
