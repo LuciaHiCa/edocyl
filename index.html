@@ -106,7 +106,7 @@
   .lede{ margin:0; max-width: 64ch; color: var(--text-secondary); font-size: 15.5px; }
 
   /* ---------- Shared section shell ---------- */
-  .panel, .controls, .kpi-tile{
+  .panel, .controls{
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -209,13 +209,16 @@
   .year-chip:disabled{ opacity:.32; cursor:not-allowed; }
 
   /* ---------- KPI row ---------- */
-  .summary-section{ display:flex; flex-direction:column; gap:12px; }
-  .section-head{ display:flex; flex-direction:column; gap:3px; }
-  .section-head h2{ font-size:16px; font-weight:600; letter-spacing:-0.01em; }
-  .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
-  @media (max-width: 800px){ .kpi-row{ grid-template-columns: repeat(2,1fr); } }
+  /* KPIs planos dentro del recuadro blanco del resumen, separados por filetes */
+  .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:0; }
   .kpi-tile{
-    padding:15px 16px; display:flex; flex-direction:column; gap:5px;
+    padding:2px 22px; display:flex; flex-direction:column; gap:5px;
+    border-left:1px solid var(--border); min-width:0;
+  }
+  .kpi-tile:first-child{ border-left:none; padding-left:2px; }
+  @media (max-width: 800px){
+    .kpi-row{ grid-template-columns: repeat(2,1fr); row-gap:20px; }
+    .kpi-tile:nth-child(2n+1){ border-left:none; padding-left:2px; }
   }
   .kpi-label{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color: var(--text-muted); }
   .kpi-value{ font-family: var(--font-mono); font-size: clamp(20px,2.6vw,25px); font-weight:600; font-variant-numeric: tabular-nums; }
@@ -229,7 +232,7 @@
   }
   :root[data-theme="dark"] .viz-root .kpi-delta-up{ color: #f0885f; }
   :root[data-theme="dark"] .viz-root .kpi-delta-down{ color: #6ea8e6; }
-  .kpi-tile-wide{ grid-column: 1 / -1; }
+  .kpi-tile-wide{ grid-column: 1 / -1; border-left:none; padding-left:2px; }
   .kpi-empty-msg{ font-size:14px; color: var(--text-secondary); font-weight:400; font-family: var(--font-sans); }
 
   /* ---------- Main grid: map + ranking ---------- */
@@ -367,9 +370,9 @@
       </div>
     </section>
 
-    <section class="summary-section" aria-label="Resumen de la enfermedad seleccionada">
-      <div class="section-head">
-        <h2>Resumen</h2>
+    <section class="panel summary-panel" aria-label="Resumen provincial">
+      <div class="panel-head">
+        <h2>Resumen provincial</h2>
         <p class="panel-sub" id="summarySub">Elige una enfermedad para ver su resumen.</p>
       </div>
       <div class="kpi-row" id="kpiRow"></div>
