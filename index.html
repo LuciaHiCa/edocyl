@@ -42,6 +42,7 @@
     --shadow: none;
     --radius: 16px;
     --accent: #e15c1e;
+    --accent-strong: #c24c14;
     --accent-soft: rgba(225,92,30,0.10);
     --accent-ink: #ffffff;
     --seq-0: #eef0f4;   /* zero-case swatch, desaturated */
@@ -153,14 +154,18 @@
   .play-toggle{
     font: inherit; font-size:13px; font-weight:600;
     display:inline-flex; align-items:center; gap:9px; align-self:flex-start;
-    padding:11px 18px; border-radius:100px; cursor:pointer;
-    border:1px solid var(--border-strong); background: var(--surface-raised); color: var(--text-primary);
+    padding:11px 18px; border-radius:100px; cursor:pointer; text-align:left;
+    border:1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    transition: background .12s ease, border-color .12s ease;
   }
-  .play-toggle .play-ico{ font-size:10px; color: var(--accent); }
-  .play-toggle:hover:not(:disabled){ border-color: var(--border-strong); background: var(--surface-sunken); }
-  .play-toggle.playing{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .play-toggle.playing .play-ico{ color: var(--accent-ink); }
-  .play-toggle:disabled{ opacity:.5; cursor:not-allowed; }
+  .play-toggle .play-ico{ font-size:10px; color: var(--accent-ink); }
+  .play-toggle:hover:not(:disabled){ background: var(--accent-strong); border-color: var(--accent-strong); }
+  .play-toggle.playing{ background: var(--accent-strong); border-color: var(--accent-strong); }
+  .play-toggle:disabled{
+    background: var(--surface-sunken); border-color: var(--border); color: var(--text-muted);
+    cursor:not-allowed;
+  }
+  .play-toggle:disabled .play-ico{ color: var(--text-muted); }
   .play-progress{ height:4px; border-radius:100px; background: var(--grid); overflow:hidden; }
   .play-progress > span{ display:block; height:100%; width:0; background: var(--accent); transition: width .25s linear; }
 
