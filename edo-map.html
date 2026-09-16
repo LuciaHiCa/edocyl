@@ -183,6 +183,9 @@
   .year-chip:disabled{ opacity:.32; cursor:not-allowed; }
 
   /* ---------- KPI row ---------- */
+  .summary-section{ display:flex; flex-direction:column; gap:12px; }
+  .section-head{ display:flex; flex-direction:column; gap:3px; }
+  .section-head h2{ font-size:16px; font-weight:600; letter-spacing:-0.01em; }
   .kpi-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
   @media (max-width: 800px){ .kpi-row{ grid-template-columns: repeat(2,1fr); } }
   .kpi-tile{
@@ -353,6 +356,14 @@
       </div>
     </section>
 
+    <section class="summary-section" aria-label="Resumen de la enfermedad seleccionada">
+      <div class="section-head">
+        <h2>Resumen</h2>
+        <p class="panel-sub" id="summarySub">Elige una enfermedad para ver su resumen.</p>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+    </section>
+
     <section class="panel map-panel">
       <div class="panel-head">
         <h2 id="mapTitle">Mapa de evolución de las enfermedades por año y provincia</h2>
@@ -394,8 +405,6 @@
         </aside>
       </div>
     </section>
-
-    <section class="kpi-row" id="kpiRow" aria-label="Indicadores clave"></section>
 
     <section class="panel rank-panel">
       <div class="panel-head">
@@ -1029,6 +1038,8 @@
     var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
 
     var est2018 = state.metric === "tasa" && state.year === 2018;
+    document.getElementById("summarySub").textContent =
+      diseaseName + " · Castilla y León · " + state.year;
     document.getElementById("mapSub").textContent =
       diseaseName + " · " + state.year + " · " + metricLabel + (est2018 ? " · tasa estimada" : "");
     document.getElementById("rankSub").textContent =
@@ -1108,6 +1119,7 @@
   }
 
   function renderEmptyState(){
+    document.getElementById("summarySub").textContent = "Elige una enfermedad para ver su resumen.";
     document.getElementById("mapSub").textContent = "Elige o busca una enfermedad para ver el mapa.";
     document.getElementById("rankSub").textContent = "Elige una enfermedad para ver el ranking provincial.";
     document.getElementById("trendSub").textContent = "Elige una enfermedad para ver su evolución 2008–2024.";
