@@ -29,15 +29,12 @@ STANDALONE_HEAD = """<meta charset="utf-8">
 <style>
   /* Reset equivalente al que Artifact inyecta, para que la pagina autonoma
      se vea exactamente igual que el artifact. */
-  html{ color-scheme: light dark; }
+  html{ color-scheme: light; }
   body{ margin: 0; font: 14px "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-        background: #f4f5f7; }
+        background: #ffffff; }
   img{ max-width: 100%; }
   [hidden]{ display: none !important; }
   .viz-root{ min-height: 100vh; }
-  @media (prefers-color-scheme: dark){
-    body{ background: #0d0e10; }
-  }
 </style>"""
 
 
