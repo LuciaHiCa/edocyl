@@ -334,7 +334,7 @@
 
     <header class="masthead">
       <h1>Evolución de las Enfermedades de Declaración Obligatoria (EDO) en Castilla y León</h1>
-      <p class="lede">Explora los casos declarados y las tasas por 100.000 habitantes de 2008 a 2024 por año y provincia a través de un mapa interactivo, gráficos de evolución histórica y un ranking provincial.</p>
+      <p class="lede">Explora los casos declarados y las tasas por 100.000 habitantes desde 2008 a 2024 por año y provincia a través de un mapa interactivo, gráficos de evolución histórica y un ranking provincial.</p>
     </header>
 
     <section class="controls" aria-label="Buscar enfermedad">
@@ -367,14 +367,14 @@
           <div class="control-group metric-control">
             <span class="control-label">Indicador</span>
             <div class="segmented" role="group" aria-label="Indicador">
-              <button type="button" data-metric="tasa" class="seg-btn active">Tasa /100.000 hab.</button>
               <button type="button" data-metric="casos" class="seg-btn">Casos</button>
+              <button type="button" data-metric="tasa" class="seg-btn active">Tasa /100.000 hab.</button>
             </div>
           </div>
           <div class="control-group year-control">
             <div class="year-head">
               <span class="control-label">Año</span>
-              <span id="yearValue" class="year-value">2024</span>
+              <span id="yearValue" class="year-value">2008</span>
             </div>
 
             <div class="year-sub">
@@ -562,7 +562,7 @@
 
   var state = {
     diseaseIdx: null,   // no disease preselected — the user searches or picks one
-    year: 2024,
+    year: 2008,
     metric: "tasa",  // 'tasa' | 'casos'
     selected: [],    // province indices being compared in the trend chart
     hovered: null,   // province index
@@ -682,7 +682,7 @@
     syncQuickPicks();
     var avail = yearsFor(idx);
     if(avail.indexOf(state.year) === -1){
-      state.year = avail[avail.length-1];
+      state.year = avail[0];
     }
     configureYearSlider();
     renderAll();
@@ -758,7 +758,7 @@
       b.title = missing ? ("Sin datos de esta enfermedad en " + yr) : "";
     });
     if(currentAvailYears.indexOf(state.year) === -1){
-      state.year = currentAvailYears[currentAvailYears.length - 1];
+      state.year = currentAvailYears[0];
     }
     playBtn.disabled = state.diseaseIdx === null || currentAvailYears.length < 2;
     playBtn.title = state.diseaseIdx === null ? "Elige una enfermedad para reproducir la evolución" : "";
