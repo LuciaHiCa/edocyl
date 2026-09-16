@@ -31,7 +31,7 @@ STANDALONE_HEAD = """<meta charset="utf-8">
      se vea exactamente igual que el artifact. */
   html{ color-scheme: light; }
   body{ margin: 0; font: 14px "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-        background: #ffffff; }
+        background: #eef2f7; }
   img{ max-width: 100%; }
   [hidden]{ display: none !important; }
   .viz-root{ min-height: 100vh; }
