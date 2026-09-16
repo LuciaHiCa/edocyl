@@ -132,9 +132,10 @@
   .quick-pick.active{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
   /* -- map + its controls side by side -- */
-  .map-layout{ display:grid; grid-template-columns: minmax(0,1.45fr) minmax(0,1fr); gap:26px; align-items:start; }
+  .map-layout{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:26px; align-items:start; }
   @media (max-width: 900px){ .map-layout{ grid-template-columns: 1fr; gap:22px; } }
-  .map-figure{ min-width:0; }
+  .map-figure{ min-width:0; width:100%; max-width:500px; }
+  @media (max-width: 900px){ .map-figure{ max-width:440px; margin-inline:auto; } }
   .map-controls{
     display:flex; flex-direction:column; gap:20px; min-width:0;
     padding:16px 18px; border:1px solid var(--border); border-radius:12px;
