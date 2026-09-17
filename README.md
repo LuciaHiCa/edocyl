@@ -148,16 +148,26 @@ headless) en claro y oscuro.
 - Sin enfermedad preseleccionada a propósito (pedido del usuario): al cargar,
   mapa/ranking/evolución muestran estado vacío con mensaje invitando a buscar.
 
-## Selección y normalización de las 55 EDO
+## Selección y normalización de las 56 EDO
 Implementado en `scripts/build_dataset.py`; ahí están las tablas completas.
 
-- **Referencia:** Anexo I de la Orden SSI/445/2015 (60 EDO). Se descartan 4 que
-  no están representadas de forma equivalente en el dataset provincial
-  (encefalitis por garrapatas, linfogranuloma venéreo, toxoplasmosis congénita,
-  viruela) y la gripe, excluida a propósito del proyecto. Quedan **55**.
-- **78 denominaciones** en el dataset → 37 se mantienen, 14 se renombran,
-  9 se agregan en 4 grupos y **19 se excluyen** (incluye las dos grafías de la
-  gripe aviar, con y sin tilde, que la fuente trata como categorías distintas).
+- **Referencia:** Orden SSI/445/2015. **Anexo I** (60 EDO), **Anexo II** (solo
+  modalidades de declaración, sin lista de enfermedades) y **Anexo III**
+  («Enfermedades endémicas de ámbito regional», una única entrada: enfermedad
+  de Lyme). Del Anexo I se descartan 4 no representadas de forma equivalente en
+  el dataset (encefalitis por garrapatas, linfogranuloma venéreo, toxoplasmosis
+  congénita, viruela) y la gripe, excluida a propósito. 60 − 5 = 55, **+ Lyme
+  = 56**.
+- **79 denominaciones distintas** en el dataset (no 78: la fuente trae las dos
+  grafías de la gripe aviar, con y sin tilde, como categorías separadas) → 61 se
+  utilizan y **18 se excluyen**. El script valida en cada ejecución que la suma
+  cuadra y que ninguna está a la vez en las dos listas.
+- **Shigelosis:** el Anexo I la escribe «Shigellosis» (doble L). Se conserva en
+  la interfaz «Shigelosis», la grafía del dataset, con la correspondencia
+  documentada en el script.
+- **Toxoplasmosis: excluida.** El Anexo I recoge «Toxoplasmosis congénita»
+  (I-54) y el dataset trae «Toxoplasmosis» sin precisar la forma congénita; no
+  se asume la equivalencia sin respaldo documental.
 - **Solo se agregan series que no coexisten.** Comprobado año-provincia: Dengue
   (2008-22 → 2023-24), E. coli Shiga/Vero (3 etiquetas sucesivas), Polio/PFA y
   Tétanos/Tétanos neonatal (en estos dos, una de las series está siempre a cero).
@@ -173,7 +183,7 @@ Implementado en `scripts/build_dataset.py`; ahí están las tablas completas.
 - **8 EDO quedan sin ningún caso en 2008-2024** y se conservan a propósito
   (cólera, difteria, fiebre amarilla, herpes zóster, peste, rabia, rubéola
   congénita, SARS): que no haya casos declarados también es información.
-- Resultado: **8.262 celdas** enfermedad-año-provincia y **109.323 casos**
+- Resultado: **8.415 celdas** enfermedad-año-provincia y **109.495 casos**
   (antes 78 denominaciones y 742.419 casos; la gripe aportaba 493.963 y la
   COVID 136.211).
 

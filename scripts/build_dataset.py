@@ -7,18 +7,26 @@ borrar el compact y volver a ejecutar este script debe dar el mismo resultado.
 Hace tres cosas, en este orden:
 
 1. SELECCIÓN. De las denominaciones del dataset provincial solo se conservan las
-   que pueden asignarse con seguridad a una de las 55 Enfermedades de Declaración
-   Obligatoria seleccionadas para EDO CyL (ver `EDO_55`). El resto se excluye de
-   forma explícita y documentada en `EXCLUIDAS`.
+   que pueden asignarse con seguridad a una de las 56 Enfermedades de Declaración
+   Obligatoria seleccionadas para EDO CyL (ver `EDO_SELECCIONADAS`). El resto se
+   excluye de forma explícita y documentada en `EXCLUIDAS`.
 
-   Las 55 se toman del Anexo I de la Orden SSI/445/2015, de 9 de marzo, que
-   recoge 60 EDO. De esas 60 quedan fuera:
-     - Encefalitis transmitida por garrapatas, Linfogranuloma venéreo,
-       Toxoplasmosis congénita y Viruela: no están representadas de forma
-       equivalente en el dataset provincial.
-     - Gripe / Gripe humana por un nuevo subtipo de virus: excluida
+   Referencia: Orden SSI/445/2015, de 9 de marzo (BOE-A-2015-2837).
+     - ANEXO I, «Lista de enfermedades de declaración obligatoria»: 60 entradas.
+       Cada EDO lleva abajo su número de anexo como comentario (I-1 ... I-60).
+     - ANEXO II, «Modalidades de la declaración»: no contiene lista de
+       enfermedades, solo regula cómo se declara. No aporta ninguna EDO.
+     - ANEXO III, «Enfermedades endémicas de ámbito regional»: una única
+       entrada, Enfermedad de Lyme, que por tanto forma parte de la selección.
+
+   De las 60 del Anexo I quedan fuera 5:
+     - Encefalitis transmitida por garrapatas (I-9), Linfogranuloma venéreo
+       (I-37), Toxoplasmosis congénita (I-54) y Viruela (I-59): no están
+       representadas de forma equivalente en el dataset provincial.
+     - Gripe / Gripe humana por un nuevo subtipo de virus (I-23): excluida
        deliberadamente del proyecto, junto con el resto de categorías de gripe
        de la fuente.
+   60 - 5 = 55, más Lyme del Anexo III = 56.
 
 2. NORMALIZACIÓN. La fuente usa a lo largo de los años denominaciones distintas
    para una misma EDO. `NOMBRE_OFICIAL` es el mapeo explícito
@@ -97,6 +105,7 @@ NOMBRE_OFICIAL = {
     "Hepatitis C": "Hepatitis C",
     "Hidatidosis": "Hidatidosis",
     "Infección gonocócica": "Infección gonocócica",
+    "Enfermedad de Lyme": "Enfermedad de Lyme",     # ANEXO III (única entrada)
     "Legionelosis": "Legionelosis",
     "Leishmaniasis": "Leishmaniasis",
     "Lepra": "Lepra",
@@ -109,6 +118,8 @@ NOMBRE_OFICIAL = {
     "Rubéola": "Rubéola",
     "Rubéola congénita": "Rubéola congénita",
     "Sarampión": "Sarampión",
+    # I-49: el Anexo I escribe «Shigellosis» (doble L); en la interfaz se conserva
+    # «Shigelosis», la grafía del Excel y la de uso habitual en castellano.
     "Shigelosis": "Shigelosis",
     "Sífilis": "Sífilis",
     "Sífilis congénita": "Sífilis congénita",
@@ -166,12 +177,11 @@ EXCLUIDAS = {
     "SIDA": "indicador distinto de «Nuevas infecciones por VIH/Sida»; coexisten y no son agregables",
     "COVID-2019": "no figura en el Anexo I de la Orden SSI/445/2015",
     "Infección Respiratoria Aguda Grave (IRAG)": "no figura en el Anexo I",
-    "Enfermedad de Lyme": "no figura en el Anexo I",
     "Enfermedad invasiva Estreptococo grupo A (SGAi)": "no figura en el Anexo I",
     "Enfermedad por virus Zika": "no figura en el Anexo I",
     "MPOX": "no figura en el Anexo I",
-    "Tifus exantemático": "no figura entre las 55 seleccionadas",
-    "Toxoplasmosis": "la EDO del Anexo I es «Toxoplasmosis congénita», ausente del dataset",
+    "Tifus exantemático": "no figura en ninguno de los tres anexos",
+    "Toxoplasmosis": "el Anexo I recoge «Toxoplasmosis congénita» (I-54); el Excel no precisa\n                      que se trate de la forma congénita y no se asume la equivalencia",
     "Meningitis víricas": "categoría agrupada, no asignable a una EDO concreta",
     "Otras Meningitis Bacterianas": "categoría agrupada, no asignable a una EDO concreta",
     "Otras hepatitis víricas": "categoría agrupada, no asignable a una EDO concreta",
@@ -179,7 +189,7 @@ EXCLUIDAS = {
     "Otras ITS": "categoría agrupada, no asignable a una EDO concreta",
 }
 
-EDO_55 = sorted(set(NOMBRE_OFICIAL.values()))
+EDO_SELECCIONADAS = sorted(set(NOMBRE_OFICIAL.values()))
 
 
 def cargar_raw():
@@ -187,18 +197,41 @@ def cargar_raw():
 
 
 def comprobar_cobertura(raw):
-    """Ninguna denominación del dataset puede quedar sin clasificar."""
-    del_dataset = {r["enfermedad"].strip() for r in raw
-                   if r["provincia"].strip() in PROV_IDX}
-    clasificadas = set(NOMBRE_OFICIAL) | set(EXCLUIDAS)
-    sin_clasificar = del_dataset - clasificadas
-    inventadas = clasificadas - del_dataset
+    """Toda denominación del Excel cae en «utilizada» o «excluida», y en una sola.
+
+    Imprime el resultado de la validación para poder auditarla.
+    """
+    del_excel = {r["enfermedad"].strip() for r in raw
+                 if r["provincia"].strip() in PROV_IDX}
+    usadas, excluidas = set(NOMBRE_OFICIAL), set(EXCLUIDAS)
+
+    sin_clasificar = del_excel - usadas - excluidas
+    solapadas = usadas & excluidas
+    inventadas = (usadas | excluidas) - del_excel
+
+    print("VALIDACIÓN DE LA CLASIFICACIÓN")
+    print("  denominaciones distintas en el Excel : %d" % len(del_excel))
+    print("  utilizadas                           : %d" % len(usadas))
+    print("  excluidas                            : %d" % len(excluidas))
+    print("  utilizadas + excluidas               : %d  %s"
+          % (len(usadas) + len(excluidas),
+             "= total" if len(usadas) + len(excluidas) == len(del_excel) else "!= TOTAL"))
+    print("  sin clasificar                       : %s" % (sorted(sin_clasificar) or "ninguna"))
+    print("  en ambas listas a la vez (solape)    : %s" % (sorted(solapadas) or "ninguna"))
+    print("  reglas sin denominación real         : %s" % (sorted(inventadas) or "ninguna"))
+    print("  EDO resultantes                      : %d" % len(EDO_SELECCIONADAS))
+
     if sin_clasificar:
-        sys.exit("Denominaciones del dataset sin clasificar: %s" % sorted(sin_clasificar))
+        sys.exit("ABORTA: denominaciones sin clasificar")
+    if solapadas:
+        sys.exit("ABORTA: denominaciones a la vez utilizadas y excluidas")
     if inventadas:
-        sys.exit("Reglas que no corresponden a ninguna denominación real: %s" % sorted(inventadas))
-    if len(EDO_55) != 55:
-        sys.exit("El mapeo produce %d EDO, se esperaban 55" % len(EDO_55))
+        sys.exit("ABORTA: reglas que no corresponden a ninguna denominación real")
+    if len(usadas) + len(excluidas) != len(del_excel):
+        sys.exit("ABORTA: la suma de utilizadas y excluidas no cuadra con el Excel")
+    if len(EDO_SELECCIONADAS) != 56:
+        sys.exit("ABORTA: el mapeo produce %d EDO, se esperaban 56" % len(EDO_SELECCIONADAS))
+    print()
 
 
 def comprobar_solapes(raw):
@@ -311,6 +344,20 @@ def main():
     print("casos declarados:        %s" % f"{casos:,}")
     print("tasas estimadas de %d:  %d celdas" % (ANIO_TASA_ROTA, estimadas))
     print("denominaciones excluidas: %d" % len(EXCLUIDAS))
+
+    print("\nEDO formadas por varias etiquetas del Excel:")
+    agrupadas = defaultdict(list)
+    for origen, destino in NOMBRE_OFICIAL.items():
+        agrupadas[destino].append(origen)
+    for destino in sorted(agrupadas):
+        origenes = agrupadas[destino]
+        if len(origenes) > 1:
+            print("  %s" % destino)
+            for o in sorted(origenes):
+                anios = sorted({int(r["ano"]) for r in raw
+                                if r["enfermedad"].strip() == o
+                                and r["provincia"].strip() in PROV_IDX})
+                print("      <- «%s»  (%d-%d)" % (o, anios[0], anios[-1]))
 
 
 if __name__ == "__main__":
