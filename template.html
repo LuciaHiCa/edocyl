@@ -192,6 +192,7 @@
   .legend-zero-swatch{ width:12px; height:12px; border-radius:3px; background: var(--seq-0); border:1px solid var(--border); display:inline-block; }
 
   .rank-metric-control, .trend-metric-control{ margin-bottom:16px; }
+  .rank-year-control{ gap:8px; margin-bottom:20px; }
   .bars{ display:flex; flex-direction:column; gap:7px; }
   .bar-row{ display:grid; grid-template-columns: 92px 1fr 72px; align-items:center; gap:14px; cursor:pointer; padding:6px 10px; border-radius:10px; transition: background .12s ease; }
   .bar-row:hover{ background: var(--surface-sunken); }
@@ -374,6 +375,14 @@
           <button type="button" data-metric="tasa" class="seg-btn">Tasa /100.000 hab.</button>
         </div>
       </div>
+      <div class="control-group rank-year-control">
+        <div class="year-sub-head">
+          <span class="year-sub-label">Selección de año</span>
+          <span id="rankYearValue" class="year-value">2008</span>
+        </div>
+        <span class="year-note">Elegir año para mostrar el ranking.</span>
+        <div class="year-bar" id="rankYearBar" role="group" aria-label="Elegir año del ranking"></div>
+      </div>
       <div class="bars" id="bars"></div>
     </section>
 
@@ -540,6 +549,7 @@
     year: 2008,
     metric: "casos",      // indicador del mapa: 'tasa' | 'casos'
     rankMetric: "casos",  // indicador del ranking provincial, independiente del mapa
+    rankYear: 2008,       // año del ranking provincial, independiente del mapa
     trendMetric: "casos", // indicador de la gráfica de evolución, independiente del mapa
     selected: [],    // province indices being compared in the trend chart
     hovered: null,   // province index
@@ -837,6 +847,36 @@
   // ---------- Bars ----------
   var barsEl = document.getElementById("bars");
 
+  // Barra de años propia del ranking (independiente de la del mapa)
+  var rankYearValueEl = document.getElementById("rankYearValue");
+  var rankYearChips = years.map(function(yr){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "year-chip"; b.textContent = yr;
+    b.setAttribute("data-year", yr);
+    b.addEventListener("click", function(){
+      if(b.disabled) return;
+      state.rankYear = yr;
+      renderAll();
+    });
+    document.getElementById("rankYearBar").appendChild(b);
+    return b;
+  });
+
+  function syncRankYearUI(){
+    var avail = state.diseaseIdx === null ? years : yearsFor(state.diseaseIdx);
+    if(avail.length && avail.indexOf(state.rankYear) === -1) state.rankYear = avail[0];
+    rankYearValueEl.textContent = state.rankYear;
+    rankYearChips.forEach(function(b){
+      var yr = Number(b.getAttribute("data-year"));
+      var missing = state.diseaseIdx !== null && avail.indexOf(yr) === -1;
+      b.disabled = missing;
+      b.title = missing ? ("Sin datos de esta enfermedad en " + yr) : "";
+      var on = yr === state.rankYear;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
   // ---------- KPIs ----------
   var kpiEl = document.getElementById("kpiRow");
 
@@ -968,19 +1008,15 @@
     var metricLabel = state.metric === "tasa" ? "tasa /100.000 hab." : "casos";
 
     var est2018 = state.metric === "tasa" && state.year === 2018;
-    var rankMetricLabel = state.rankMetric === "tasa" ? "tasa /100.000 hab." : "casos";
-    var estRank2018 = state.rankMetric === "tasa" && state.year === 2018;
     document.getElementById("summarySub").textContent =
       diseaseName + " · Castilla y León · " + state.year;
     document.getElementById("mapSub").textContent =
       diseaseName + " · " + state.year + " · " + metricLabel + (est2018 ? " · tasa estimada" : "");
-    document.getElementById("rankSub").textContent =
-      "Provincias ordenadas por " + rankMetricLabel + ", " + state.year + "." + (estRank2018 ? " " + EST_2018_NOTE : "");
+    renderRanking(diseaseName);
 
     if(!rows){
       mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
       legendEl.innerHTML = '<p class="empty-note">No hay datos de «' + diseaseName + '» para ' + state.year + '.</p>';
-      barsEl.innerHTML = '<p class="empty-note">Sin datos para este año.</p>';
       renderKPIs(null, diseaseName);
       renderTrend(diseaseName);
       return;
@@ -1012,13 +1048,32 @@
       '<div class="legend-ticks"><span>0' + (state.metric==='tasa' ? '' : ' casos') + '</span><span>' + fmt(maxVal, state.metric==='tasa'?1:0) + (state.metric==='tasa' ? ' /100.000' : ' casos') + '</span></div>' +
       '<div class="legend-foot"><span class="legend-zero-swatch"></span><span>Sin casos declarados</span></div>';
 
-    // bars (ranking) — usa su propio indicador, con casos como desempate
-    var rankValues = provinces.map(function(_, i){ return valueAt(rows, i, state.rankMetric); });
+    renderKPIs(rows, diseaseName, values, maxVal);
+    renderTrend(diseaseName);
+    highlightTrend();
+  }
+
+  // ---------- Ranking provincial (indicador y año propios) ----------
+  function renderRanking(diseaseName){
+    syncRankYearUI();
+    var rankRows = rowsFor(state.diseaseIdx, state.rankYear);
+    var rankMetricLabel = state.rankMetric === "tasa" ? "tasa /100.000 hab." : "casos";
+    var estRank2018 = state.rankMetric === "tasa" && state.rankYear === 2018;
+    document.getElementById("rankSub").textContent =
+      "Provincias ordenadas por " + rankMetricLabel + ", " + state.rankYear + "." +
+      (estRank2018 ? " " + EST_2018_NOTE : "");
+
+    if(!rankRows){
+      barsEl.innerHTML = '<p class="empty-note">No hay datos de «' + diseaseName + '» para ' + state.rankYear + '.</p>';
+      return;
+    }
+
+    var rankValues = provinces.map(function(_, i){ return valueAt(rankRows, i, state.rankMetric); });
     var rankMax = Math.max.apply(null, rankValues.filter(function(v){ return v !== null; }).concat([0]));
     var rankScale = makeColorScale(rankMax || 1);
     function rankColorForIdx(i){
       var v = rankValues[i];
-      if(v === null || v === 0) return zeroC;
+      if(v === null || v === 0) return zeroSwatch();
       return rankScale(v);
     }
     var order = provinces.map(function(_, i){ return i; })
@@ -1026,7 +1081,7 @@
       .sort(function(a,b){
         var d = rankValues[b] - rankValues[a];
         if(d) return d;
-        return (rows[b] ? rows[b][0] : 0) - (rows[a] ? rows[a][0] : 0);
+        return (rankRows[b] ? rankRows[b][0] : 0) - (rankRows[a] ? rankRows[a][0] : 0);
       });
     barsEl.innerHTML = "";
     order.forEach(function(i){
@@ -1050,10 +1105,6 @@
         : "Sin casos declarados en ninguna provincia este año.";
       barsEl.appendChild(note);
     }
-
-    renderKPIs(rows, diseaseName, values, maxVal);
-    renderTrend(diseaseName);
-    highlightTrend();
   }
 
   function renderEmptyState(){
@@ -1064,6 +1115,7 @@
     mapG.selectAll("path.province-path").attr("fill", zeroSwatch());
     legendEl.innerHTML = '<p class="empty-note">Busca o elige una enfermedad para activar la leyenda.</p>';
     barsEl.innerHTML = '<p class="empty-note">Busca o elige una enfermedad para ver el ranking de provincias.</p>';
+    syncRankYearUI();
     kpiEl.innerHTML = '<div class="kpi-tile kpi-tile-wide"><span class="kpi-label">Para empezar</span>' +
       '<span class="kpi-empty-msg">Busca una enfermedad de declaración obligatoria (p. ej. «Sarampión» o «Tuberculosis») o elige una de las sugerencias, para ver sus casos y tasas por provincia.</span></div>';
     linesG.selectAll("*").remove();
