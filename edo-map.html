@@ -270,31 +270,8 @@
     background: var(--surface); border:1px solid var(--border); border-radius:11px; padding:14px 16px;
   }
   .note-body li b, .note-body p b{ color: var(--text-primary); font-weight:600; }
-  .note-foot{ margin:0; font-size:12.5px; color: var(--text-muted); line-height:1.5; }
   .note-link{ margin:2px 0 0; font-size:13px; font-weight:600; }
   .note-link a{ text-decoration:underline; text-underline-offset:3px; }
-
-  .note-sub{ background: var(--surface); border:1px solid var(--border); border-radius:11px; }
-  .note-sub > summary{
-    list-style:none; cursor:pointer; padding:13px 16px;
-    display:flex; align-items:center; gap:12px;
-    font-size:13.5px; font-weight:600; color: var(--text-primary);
-  }
-  .note-sub > summary::-webkit-details-marker{ display:none; }
-  .note-sub > summary::marker{ content:""; }
-  .note-sub > summary::after{
-    content:"+"; margin-left:auto; flex:none;
-    width:22px; height:22px; border-radius:100px;
-    background: var(--accent-soft); color: var(--accent);
-    font-family: var(--font-mono); font-size:13px; font-weight:600; line-height:21px; text-align:center;
-    transition: background .12s ease, color .12s ease;
-  }
-  .note-sub[open] > summary::after{ content:"\2013"; background: var(--accent); color: var(--accent-ink); }
-  .note-sub > summary:hover::after{ background: var(--accent-soft-hover); }
-  .note-sub[open] > summary:hover::after{ background: var(--accent); }
-  .note-sub > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:11px; }
-  .note-sub > p{ margin:0 16px 14px; font-size:13.5px; color: var(--text-secondary); line-height:1.6; max-width:82ch; }
-  .note-sub > p b{ color: var(--text-primary); font-weight:600; }
 
   .site-footer{ border-top:1px solid var(--border); padding-top:24px; margin-top:4px; display:flex; flex-direction:column; gap:6px; }
   .site-footer p{ margin:0; font-size:12.5px; color: var(--text-muted); max-width: 92ch; }
@@ -440,90 +417,6 @@
               <li><b>Variación interanual:</b> indica cuánto ha aumentado o disminuido una cifra respecto al año anterior, expresado como porcentaje.</li>
               <li><b>Provincias en gris:</b> indican que en el año seleccionado constan 0 casos declarados de la enfermedad.</li>
             </ul>
-          </div>
-        </details>
-
-        <details class="note-acc">
-          <summary>Brotes reseñables y cambios destacables</summary>
-          <div class="note-body">
-            <p>A lo largo de los años se observan cambios importantes en la frecuencia de algunas enfermedades.</p>
-
-            <details class="note-sub">
-              <summary>Parotiditis</summary>
-              <p>La <b>parotiditis (paperas)</b>, una infección vírica que afecta principalmente a las glándulas salivales, presentó repuntes destacados en 2012–2013 y 2019. Estos aumentos se han relacionado, entre otros factores, con una disminución de la protección de la vacuna con el paso del tiempo en determinados grupos de población, lo que puede favorecer la aparición de brotes.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>Varicela</summary>
-              <p>La <b>varicela</b>, una infección vírica muy contagiosa caracterizada principalmente por la aparición de una erupción en la piel, muestra una clara disminución desde la incorporación de la vacunación generalizada en la infancia al <b>calendario de vacunación de Castilla y León en 2016</b>, lo que ha contribuido a reducir notablemente la frecuencia de la enfermedad.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>Tos ferina</summary>
-              <p>Recientemente, la <b>tos ferina</b>, una infección bacteriana de las vías respiratorias que provoca episodios de tos intensa y puede ser especialmente grave en los bebés, ha experimentado un fuerte repunte, especialmente en 2024. Este aumento no ha sido exclusivo de Castilla y León, sino que forma parte de un incremento observado en España y otros países europeos tras la pandemia de COVID-19, después de varios años en los que su circulación fue muy reducida coincidiendo con las medidas de prevención y distanciamiento frente a las infecciones respiratorias.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>Otras destacables</summary>
-              <p>Algunas enfermedades muestran una tendencia al aumento en los últimos años. Entre ellas se encuentra la <b>tularemia</b>, una infección bacteriana que afecta principalmente a animales y que puede transmitirse a las personas por diferentes vías, como el contacto con animales infectados o la picadura de determinados artrópodos. También destaca la <b>campilobacteriosis</b>, una infección intestinal causada por bacterias que suele adquirirse a través de alimentos o agua contaminados y que provoca principalmente diarrea y otros síntomas digestivos. Asimismo, se observa un aumento de algunas <b>infecciones de transmisión sexual</b>, como la <b>sífilis y la infección gonocócica (gonorrea)</b>. La evolución de estas enfermedades hace necesario mantener su seguimiento y vigilancia.</p>
-            </details>
-          </div>
-        </details>
-
-        <details class="note-acc">
-          <summary>¿Por qué no podemos comparar todos los años por igual?</summary>
-          <div class="note-body">
-            <p>Al observar la evolución a lo largo del tiempo, hay algunos años que presentan cambios muy llamativos. Sin embargo, no todos estos cambios significan necesariamente que haya aumentado o disminuido el conjunto de las enfermedades. Algunos se deben a situaciones excepcionales, como una pandemia, y otros a cambios en la forma de vigilar y registrar las enfermedades.</p>
-
-            <details class="note-sub">
-              <summary>2009 — La pandemia de gripe A</summary>
-              <p>El gran aumento de casos de gripe registrado en 2009 coincide con la pandemia de gripe A(H1N1), provocada por la aparición y rápida expansión de un nuevo virus de la gripe. Fue una situación excepcional. Tras este episodio, las cifras descendieron de forma importante en 2010 y posteriormente recuperaron un comportamiento más habitual.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>2020 — La llegada de la COVID-19</summary>
-              <p>La COVID-19 provoca otro cambio excepcional en la serie. Durante 2020 aparece incluida entre las enfermedades notificadas en estos datos y concentra una parte muy importante de los casos registrados. Posteriormente, su vigilancia y registro se realizaron mediante otros sistemas, por lo que deja de aparecer en este conjunto de datos. Por este motivo, 2020 no es directamente comparable con otros años.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>2021 — Menos transmisión de muchas infecciones</summary>
-              <p>En 2021 se observa una disminución de numerosas enfermedades transmisibles. Las medidas utilizadas durante la pandemia —como las mascarillas, la reducción de los contactos sociales, el distanciamiento o las restricciones de movilidad— no solo ayudaron a limitar la COVID-19, sino también la transmisión de otras infecciones, como la gripe, la varicela o las paperas.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>Desde 2023 — La gripe deja de aparecer en estos datos</summary>
-              <p>A partir de 2023, la gripe deja de aparecer en este conjunto de datos al pasar a ser seguida mediante otros sistemas específicos de vigilancia de las infecciones respiratorias. Como anteriormente representaba una parte importante de las notificaciones, este cambio provoca una reducción considerable del total registrado.</p>
-              <p>Por eso, una cifra total más baja desde 2023 no significa necesariamente que haya menos enfermedades, sino que ha cambiado qué enfermedades se incluyen en estos datos.</p>
-            </details>
-          </div>
-        </details>
-
-        <details class="note-acc">
-          <summary>¿Qué hay que tener en cuenta al interpretar estos datos?</summary>
-          <div class="note-body">
-            <p>Como ocurre con cualquier registro que reúne información de muchos años, existen algunos aspectos que conviene conocer antes de interpretar y comparar los resultados.</p>
-
-            <details class="note-sub">
-              <summary>¿Por qué las tasas de 2018 son estimadas?</summary>
-              <p>En 2018, la fuente original presenta tasas iguales a cero en ocho provincias pese a existir casos declarados. EDO CyL estima estas tasas utilizando la población implícita que puede deducirse de los propios registros válidos del año anterior. Para cada provincia se obtienen múltiples estimaciones independientes y se utiliza su mediana. Los resultados de 2018 se identifican siempre mediante el símbolo ≈ para diferenciarlos de las tasas publicadas oficialmente.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>Una misma enfermedad puede aparecer con distintos nombres</summary>
-              <p>A lo largo de los años, algunas enfermedades han cambiado de nombre en el registro. Por ejemplo, lo que anteriormente aparecía como «Fiebre del Dengue» pasa a denominarse «Dengue», y «Otras ETS» pasa a aparecer como «Otras ITS».</p>
-              <p>Por este motivo, al consultar los datos puede parecer que una enfermedad desaparece en determinados años y aparece otra nueva. En realidad, en algunos casos simplemente ha cambiado la forma de denominarla o clasificarla.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>Algunos datos pueden resultar difíciles de interpretar</summary>
-              <p>También pueden encontrarse valores aislados que resultan poco coherentes con la evolución conocida de una enfermedad. Un ejemplo es el registro de casos de «gripe aviar» en 2018. Ante este tipo de situaciones, el dato debe interpretarse con especial precaución, ya que podría deberse a algún problema de registro o clasificación en la información original.</p>
-            </details>
-
-            <details class="note-sub">
-              <summary>No siempre se vigilan las mismas enfermedades</summary>
-              <p>La lista de Enfermedades de Declaración Obligatoria (EDO) ha ido cambiando con el tiempo a medida que se actualizan las normas y los sistemas de vigilancia epidemiológica. Algunas enfermedades se incorporan, otras dejan de formar parte de este registro o pasan a vigilarse mediante otros sistemas.</p>
-              <p>Por tanto, el número total de enfermedades y casos incluidos no es exactamente el mismo todos los años. Este aspecto es importante al comparar periodos alejados en el tiempo.</p>
-            </details>
           </div>
         </details>
 
