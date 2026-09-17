@@ -292,11 +292,6 @@
     background: var(--surface); border:1px solid var(--border); border-radius:11px; padding:14px 16px;
   }
   .note-body li b, .note-body p b{ color: var(--text-primary); font-weight:600; }
-  .note-subtitle{
-    margin:6px 0 -4px; font-size:11px; font-weight:700; letter-spacing:.07em;
-    text-transform:uppercase; color: var(--accent);
-  }
-  .note-body > .note-subtitle:first-child{ margin-top:0; }
   .note-foot{ margin:0; font-size:12.5px; color: var(--text-muted); line-height:1.5; }
   .note-link{ margin:2px 0 0; font-size:13px; font-weight:600; }
   .note-link a{ text-decoration:underline; text-underline-offset:3px; }
@@ -558,11 +553,10 @@
         <details class="note-acc">
           <summary>Datos abiertos y tratamiento de datos</summary>
           <div class="note-body">
-            <p class="note-subtitle">Origen de los datos</p>
-            <p>El proyecto reutiliza el conjunto de datos «Enfermedades de Declaración Obligatoria. Casos y tasas por provincia», publicado por la Junta de Castilla y León bajo licencia CC BY 4.0. Se utilizan 10.645 registros con información sobre año, enfermedad, provincia, casos y tasa por 100.000 habitantes. Aunque el campo incluido en el conjunto de datos se denomina simplemente «Tasa», esta se interpreta como tasa por 100.000 habitantes, de acuerdo con los informes epidemiológicos oficiales de la Junta de Castilla y León, que expresan las tasas de las EDO en esta unidad.</p>
-            <p class="note-subtitle">Tratamiento de las tasas de 2018</p>
-            <p>Durante la validación de los datos se detectó que, en 2018, la fuente presenta una tasa igual a cero en ocho provincias pese a existir casos declarados. Para evitar que estos valores produzcan una representación territorial incorrecta, EDO CyL estima las tasas afectadas utilizando exclusivamente información contenida en el propio conjunto de datos. Para cada provincia se obtiene una población de referencia a partir de los registros válidos de 2017 y se utiliza para calcular la tasa correspondiente a 2018. Las estimaciones obtenidas a partir de distintos registros de cada provincia presentan una dispersión inferior al 1 %.</p>
-            <p>Estas tasas son estimaciones realizadas por EDO CyL y no valores publicados oficialmente. No modifican la fuente original y se identifican siempre mediante el símbolo ≈ y la indicación «tasa estimada».</p>
+            <ul>
+              <li><b>Origen de los datos:</b> el proyecto reutiliza el conjunto de datos «Enfermedades de Declaración Obligatoria. Casos y tasas por provincia», publicado por la Junta de Castilla y León bajo licencia CC BY 4.0. Se utilizan 10.645 registros con información sobre año, enfermedad, provincia, casos y tasa por 100.000 habitantes. Aunque el campo incluido en el conjunto de datos se denomina simplemente «Tasa», esta se interpreta como tasa por 100.000 habitantes, de acuerdo con los informes epidemiológicos oficiales de la Junta de Castilla y León, que expresan las tasas de las EDO en esta unidad.</li>
+              <li><b>Tratamiento de las tasas de 2018:</b> durante la validación de los datos se detectó que, en 2018, la fuente presenta una tasa igual a cero en ocho provincias pese a existir casos declarados. Para evitar que estos valores produzcan una representación territorial incorrecta, EDO CyL estima las tasas afectadas utilizando exclusivamente información contenida en el propio conjunto de datos. Para cada provincia se obtiene una población de referencia a partir de los registros válidos de 2017 y se utiliza para calcular la tasa correspondiente a 2018. Las estimaciones obtenidas a partir de distintos registros de cada provincia presentan una dispersión inferior al 1 %. Estas tasas son estimaciones realizadas por EDO CyL y no valores publicados oficialmente. No modifican la fuente original y se identifican siempre mediante el símbolo ≈ y la indicación «tasa estimada».</li>
+            </ul>
           </div>
         </details>
 
