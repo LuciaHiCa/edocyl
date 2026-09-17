@@ -263,17 +263,21 @@
   .note-acc > summary:hover::after{ background: var(--accent-soft-hover); }
   .note-acc[open] > summary:hover::after{ background: var(--accent); }
   .note-acc > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:14px; }
-  .note-body{ padding:0 20px 20px; display:flex; flex-direction:column; gap:10px; }
-  .note-block{
-    background: var(--surface); border:1px solid var(--border); border-radius:12px;
-    padding:16px 18px; display:flex; flex-direction:column; gap:8px;
-  }
-  .note-block-title{
+  .note-body{ padding:0 20px 18px; display:flex; flex-direction:column; }
+  .note-entry{ display:flex; flex-direction:column; gap:9px; padding:16px 0; }
+  .note-entry:first-child{ padding-top:4px; }
+  .note-entry:last-child{ padding-bottom:4px; }
+  .note-entry + .note-entry{ border-top:1px solid var(--border); }
+  .note-entry-title{
     font-size:14.5px; font-weight:600; letter-spacing:-0.01em; color: var(--text-primary);
+    display:flex; align-items:center; gap:10px;
   }
-  .note-block p{ margin:0; font-size:13.5px; color: var(--text-secondary); line-height:1.65; max-width:84ch; }
-  .note-block p b{ color: var(--text-primary); font-weight:600; }
-  .note-link{ margin:2px 0 0; font-size:13px; font-weight:600; }
+  .note-entry-title::before{
+    content:""; flex:none; width:7px; height:7px; border-radius:100px; background: var(--accent);
+  }
+  .note-entry p{ margin:0; font-size:13.5px; color: var(--text-secondary); line-height:1.65; max-width:84ch; }
+  .note-entry p b{ color: var(--text-primary); font-weight:600; }
+  .note-entry .note-link{ margin:3px 0 0; font-size:13px; font-weight:600; }
   .note-link a{ text-decoration:underline; text-underline-offset:3px; }
 
   .site-footer{ border-top:1px solid var(--border); padding-top:24px; margin-top:4px; display:flex; flex-direction:column; gap:6px; }
@@ -405,20 +409,20 @@
         <details class="note-acc">
           <summary>Terminología</summary>
           <div class="note-body">
-            <div class="note-block">
-              <span class="note-block-title">Casos</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Casos</span>
               <p>Número de casos declarados de una enfermedad en una provincia y año determinados. Muestran la magnitud absoluta de las notificaciones, pero deben interpretarse teniendo en cuenta el tamaño de la población: dos provincias con el mismo número de casos pueden presentar tasas diferentes.</p>
             </div>
-            <div class="note-block">
-              <span class="note-block-title">Tasa por 100.000 habitantes</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Tasa por 100.000 habitantes</span>
               <p>Relaciona el número de casos declarados con la población y expresa cuántos casos corresponden a 100.000 habitantes.</p>
             </div>
-            <div class="note-block">
-              <span class="note-block-title">Variación interanual</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Variación interanual</span>
               <p>Indica cuánto ha aumentado o disminuido una cifra respecto al año anterior, expresado como porcentaje.</p>
             </div>
-            <div class="note-block">
-              <span class="note-block-title">Provincias en gris</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Provincias en gris</span>
               <p>Indican que en el año seleccionado constan 0 casos declarados de la enfermedad.</p>
             </div>
           </div>
@@ -427,8 +431,8 @@
         <details class="note-acc">
           <summary>Conozca las enfermedades</summary>
           <div class="note-body">
-            <div class="note-block">
-              <span class="note-block-title">Fichas del ISCIII</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Fichas del ISCIII</span>
               <p>Selecciona una enfermedad para consultar información sobre qué es, cómo se transmite y cómo se vigila en España.</p>
               <p>La información procede del Centro Nacional de Epidemiología (CNE) del Instituto de Salud Carlos III (ISCIII), organismo de referencia nacional en vigilancia epidemiológica.</p>
               <p class="note-link"><a href="https://cne.isciii.es/es/servicios/enfermedades-transmisibles/enfermedades-a-z" target="_blank" rel="noopener">→ Consultar enfermedades de la A a la Z en el ISCIII</a></p>
@@ -439,12 +443,12 @@
         <details class="note-acc">
           <summary>Datos abiertos y tratamiento de datos</summary>
           <div class="note-body">
-            <div class="note-block">
-              <span class="note-block-title">Origen de los datos</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Origen de los datos</span>
               <p>El proyecto reutiliza el conjunto de datos «Enfermedades de Declaración Obligatoria. Casos y tasas por provincia», publicado por la Junta de Castilla y León bajo licencia CC BY 4.0. Se utilizan 10.645 registros con información sobre año, enfermedad, provincia, casos y tasa por 100.000 habitantes. Aunque el campo incluido en el conjunto de datos se denomina simplemente «Tasa», esta se interpreta como tasa por 100.000 habitantes, de acuerdo con los informes epidemiológicos oficiales de la Junta de Castilla y León, que expresan las tasas de las EDO en esta unidad.</p>
             </div>
-            <div class="note-block">
-              <span class="note-block-title">Tratamiento de las tasas de 2018</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Tratamiento de las tasas de 2018</span>
               <p>Durante la validación de los datos se detectó que, en 2018, la fuente presenta una tasa igual a cero en ocho provincias pese a existir casos declarados. Para evitar que estos valores produzcan una representación territorial incorrecta, EDO CyL estima las tasas afectadas utilizando exclusivamente información contenida en el propio conjunto de datos. Para cada provincia se obtiene una población de referencia a partir de los registros válidos de 2017 y se utiliza para calcular la tasa correspondiente a 2018. Las estimaciones obtenidas a partir de distintos registros de cada provincia presentan una dispersión inferior al 1 %. Estas tasas son estimaciones realizadas por EDO CyL y no valores publicados oficialmente. No modifican la fuente original y se identifican siempre mediante el símbolo ≈ y la indicación «tasa estimada».</p>
             </div>
           </div>
@@ -453,8 +457,8 @@
         <details class="note-acc">
           <summary>Alcance de la herramienta</summary>
           <div class="note-body">
-            <div class="note-block">
-              <span class="note-block-title">Qué muestra y qué no</span>
+            <div class="note-entry">
+              <span class="note-entry-title">Qué muestra y qué no</span>
               <p>EDO CyL permite explorar y comparar los datos procedentes de la fuente original mediante mapas, rankings y series temporales. La herramienta muestra la evolución observada de casos y tasas, pero no interpreta las causas de los aumentos o descensos detectados. Un pico o un valle en una serie puede estar relacionado con múltiples factores como brotes, cambios en la vacunación, modificaciones en la vigilancia o la notificación, entre otros, que no pueden determinarse a partir de este conjunto de datos por sí solo.</p>
               <p>Por tanto, los patrones observados deben entenderse como puntos de partida para una exploración posterior y no como evidencia de una causa concreta.</p>
             </div>
