@@ -260,49 +260,62 @@
   .empty-note{ font-size:13px; color: var(--text-muted); padding: 30px 10px; text-align:center; }
 
   /* ---------- Cuestiones importantes (acordeón) ---------- */
-  .notes-list{ display:flex; flex-direction:column; }
-  .note-acc{ border-top:1px solid var(--border); }
-  .note-acc:first-child{ border-top:none; }
+  .notes-list{ display:flex; flex-direction:column; gap:12px; }
+  .note-acc{
+    background: var(--surface-sunken); border:1px solid var(--border); border-radius:14px;
+    transition: border-color .12s ease;
+  }
+  .note-acc[open]{ border-color: var(--accent-line); }
   .note-acc > summary{
-    list-style:none; cursor:pointer; padding:19px 2px;
-    display:flex; align-items:center; gap:12px;
+    list-style:none; cursor:pointer; padding:17px 20px;
+    display:flex; align-items:center; gap:14px;
     font-size:15px; font-weight:600; letter-spacing:-0.01em; color: var(--text-primary);
   }
   .note-acc > summary::-webkit-details-marker{ display:none; }
   .note-acc > summary::marker{ content:""; }
   .note-acc > summary::after{
-    content:"+"; margin-left:auto; font-family: var(--font-mono); font-size:17px; line-height:1;
-    color: var(--text-muted); transition: color .1s ease;
+    content:"+"; margin-left:auto; flex:none;
+    width:26px; height:26px; border-radius:100px;
+    background: var(--accent-soft); color: var(--accent);
+    font-family: var(--font-mono); font-size:15px; font-weight:600; line-height:25px; text-align:center;
+    transition: background .12s ease, color .12s ease;
   }
-  .note-acc[open] > summary::after{ content:"\2013"; }
-  .note-acc > summary:hover{ color: var(--text-secondary); }
-  .note-acc > summary:hover::after{ color: var(--text-secondary); }
-  .note-acc > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:4px; }
-  .note-body{ padding:2px 2px 18px; display:flex; flex-direction:column; gap:11px; }
-  .note-body > p{ margin:0; font-size:13.5px; color: var(--text-secondary); line-height:1.55; max-width:82ch; }
-  .note-body ul{ margin:0; padding-left:17px; display:flex; flex-direction:column; gap:9px; }
-  .note-body li{ font-size:13.5px; color: var(--text-secondary); line-height:1.5; max-width:82ch; }
+  .note-acc[open] > summary::after{ content:"\2013"; background: var(--accent); color: var(--accent-ink); }
+  .note-acc > summary:hover::after{ background: var(--accent-soft-hover); }
+  .note-acc[open] > summary:hover::after{ background: var(--accent); }
+  .note-acc > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:14px; }
+  .note-body{ padding:0 20px 20px; display:flex; flex-direction:column; gap:12px; }
+  .note-body > p{ margin:0; font-size:13.5px; color: var(--text-secondary); line-height:1.6; max-width:82ch; }
+  .note-body ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .note-body li{
+    font-size:13.5px; color: var(--text-secondary); line-height:1.6; max-width:84ch;
+    background: var(--surface); border:1px solid var(--border); border-radius:11px; padding:14px 16px;
+  }
   .note-body li b, .note-body p b{ color: var(--text-primary); font-weight:600; }
-  .note-foot{ margin:0; font-size:12px; color: var(--text-muted); line-height:1.45; }
-  .note-link{ margin:2px 0 0; font-size:12.5px; font-weight:600; }
-  .note-link a{ text-decoration:underline; text-underline-offset:2px; }
+  .note-foot{ margin:0; font-size:12.5px; color: var(--text-muted); line-height:1.5; }
+  .note-link{ margin:2px 0 0; font-size:13px; font-weight:600; }
+  .note-link a{ text-decoration:underline; text-underline-offset:3px; }
 
-  .note-sub{ border-top:1px solid var(--border); }
-  .note-sub:first-of-type{ border-top:none; }
+  .note-sub{ background: var(--surface); border:1px solid var(--border); border-radius:11px; }
   .note-sub > summary{
-    list-style:none; cursor:pointer; padding:12px 2px;
-    display:flex; align-items:center; gap:10px;
+    list-style:none; cursor:pointer; padding:13px 16px;
+    display:flex; align-items:center; gap:12px;
     font-size:13.5px; font-weight:600; color: var(--text-primary);
   }
   .note-sub > summary::-webkit-details-marker{ display:none; }
   .note-sub > summary::marker{ content:""; }
   .note-sub > summary::after{
-    content:"+"; margin-left:auto; font-family: var(--font-mono); color: var(--text-muted);
+    content:"+"; margin-left:auto; flex:none;
+    width:22px; height:22px; border-radius:100px;
+    background: var(--accent-soft); color: var(--accent);
+    font-family: var(--font-mono); font-size:13px; font-weight:600; line-height:21px; text-align:center;
+    transition: background .12s ease, color .12s ease;
   }
-  .note-sub[open] > summary::after{ content:"\2013"; }
-  .note-sub > summary:hover{ color: var(--text-secondary); }
-  .note-sub > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:4px; }
-  .note-sub > p{ margin:0 0 14px; font-size:13.5px; color: var(--text-secondary); line-height:1.55; max-width:82ch; }
+  .note-sub[open] > summary::after{ content:"\2013"; background: var(--accent); color: var(--accent-ink); }
+  .note-sub > summary:hover::after{ background: var(--accent-soft-hover); }
+  .note-sub[open] > summary:hover::after{ background: var(--accent); }
+  .note-sub > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:11px; }
+  .note-sub > p{ margin:0 16px 14px; font-size:13.5px; color: var(--text-secondary); line-height:1.6; max-width:82ch; }
   .note-sub > p b{ color: var(--text-primary); font-weight:600; }
 
   .site-footer{ border-top:1px solid var(--border); padding-top:24px; margin-top:4px; display:flex; flex-direction:column; gap:6px; }
@@ -442,7 +455,7 @@
         </details>
 
         <details class="note-acc">
-          <summary>Terminología e interpretación del mapa</summary>
+          <summary>Terminología</summary>
           <div class="note-body">
             <ul>
               <li><b>Casos:</b> número de casos declarados de una enfermedad en una provincia y año determinados. Muestran la magnitud absoluta de las notificaciones, pero deben interpretarse teniendo en cuenta el tamaño de la población: dos provincias con el mismo número de casos pueden presentar tasas diferentes.</li>
@@ -450,7 +463,6 @@
               <li><b>Variación interanual:</b> indica cuánto ha aumentado o disminuido una cifra respecto al año anterior, expresado como porcentaje.</li>
               <li><b>Provincias en gris:</b> indican que en el año seleccionado constan 0 casos declarados de la enfermedad.</li>
             </ul>
-            <p class="note-foot"><b>Nota sobre 2018:</b> la fuente presenta tasas iguales a cero en ocho provincias pese a existir casos declarados. Para evitar una representación incorrecta, EDO CyL estima esas tasas a partir de los propios datos de la fuente. Se identifican con el símbolo ≈ y la indicación «tasa estimada».</p>
           </div>
         </details>
 
