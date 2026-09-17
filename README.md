@@ -166,9 +166,10 @@ Implementado en `scripts/build_dataset.py`; ahí están las tablas completas.
   (2008-2024, 1.622 casos) y «SIDA» (2008-2018, 24 casos) coexisten con casos en
   **13 celdas año-provincia**, con tasas sobre la misma población: son
   indicadores distintos. Se muestra solo la primera, bajo el nombre
-  `VIH/SIDA (nuevas infecciones por VIH/Sida)`. Se comprobó que **ni la Orden
+  `VIH/SIDA (nuevos diagnósticos de VIH)`. Se comprobó que **ni la Orden
   SSI/445/2015 ni los metadatos del dataset definen qué mide cada categoría**,
-  por lo que no se la etiqueta como "nuevos diagnósticos" ni nada equivalente.
+  así que la lectura como nuevos diagnósticos de VIH es un criterio
+  epidemiológico adoptado por el proyecto, no una definición de la fuente.
 - **8 EDO quedan sin ningún caso en 2008-2024** y se conservan a propósito
   (cólera, difteria, fiebre amarilla, herpes zóster, peste, rabia, rubéola
   congénita, SARS): que no haya casos declarados también es información.

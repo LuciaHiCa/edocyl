@@ -34,9 +34,10 @@ Hace tres cosas, en este orden:
    año-provincia con casos en ambas (p. ej. Ávila 2010: 8 y 2), con tasas
    calculadas sobre la misma población, luego son recuentos independientes de
    hechos distintos. Se muestra solo la primera y se excluye «SIDA». El nombre
-   visible conserva la sigla del Anexo I y añade entre paréntesis la
-   denominación literal de la fuente, porque ni la Orden SSI/445/2015 ni los
-   metadatos del dataset definen qué mide exactamente cada categoría.
+   visible conserva la sigla del Anexo I y precisa entre paréntesis qué
+   representa la serie. Nota: ni la Orden SSI/445/2015 ni los metadatos del
+   dataset definen qué mide cada categoría; la lectura como nuevos diagnósticos
+   de VIH es un criterio epidemiológico adoptado por el proyecto.
 
 3. TASAS DE 2018. En 2018 la fuente publica tasa 0 en ocho provincias pese a
    haber casos declarados, y algunas de las que sí trae Ávila son incoherentes.
@@ -70,7 +71,7 @@ PROV_IDX = {p: i for i, p in enumerate(PROVINCIAS)}
 ANIO_TASA_ROTA = 2018
 ANIO_POBLACION = 2017
 
-VIH = "VIH/SIDA (nuevas infecciones por VIH/Sida)"
+VIH = "VIH/SIDA (nuevos diagnósticos de VIH)"
 ECOLI = "Infección por cepas de Escherichia coli productoras de toxina Shiga o Vero"
 POLIO = "Poliomielitis/parálisis flácida aguda en menores de 15 años"
 TETANOS = "Tétanos/Tétanos neonatal"
