@@ -37,7 +37,16 @@ Hace tres cosas, en este orden:
    grupo. El script vuelve a comprobarlo en cada ejecución (`comprobar_solapes`)
    y aborta si alguna vez dejara de cumplirse.
 
-   Caso deliberadamente NO agregado: la fuente publica «Nuevas infecciones por
+   Caso deliberadamente NO agregado (I): en «Poliomielitis/parálisis flácida
+   aguda en menores de 15 años» (I-42) y en «Tétanos/Tétanos neonatal» (I-52),
+   las dos denominaciones del Excel NO son una sucesión histórica: coexisten
+   como categorías separadas durante todo 2008-2024, con fila propia en las 153
+   celdas año-provincia. Por eso no se agregan mediante suma. El nombre que
+   muestra EDO CyL es el de la entrada normativa de referencia, pero los valores
+   proceden de una sola serie: «Parálisis flácida aguda» y «Tétanos»
+   respectivamente. La otra queda en `SERIES_CONTROLADAS`.
+
+   Caso deliberadamente NO agregado (II): la fuente publica «Nuevas infecciones por
    VIH/Sida» (2008-2024) y «SIDA» (2008-2018). Coexisten en 13 celdas
    año-provincia con casos en ambas (p. ej. Ávila 2010: 8 y 2), con tasas
    calculadas sobre la misma población, luego son recuentos independientes de
@@ -150,10 +159,25 @@ NOMBRE_OFICIAL = {
     "Infección por cepas de Escherichia coli productoras de toxina Shiga o Vero": ECOLI,  # 2008-2022
     "Infección por E. coli productora de toxina shiga o vero (STEC/VTEC)": ECOLI,         # 2023
     "Infección por E. coli enterohemorrágica": ECOLI,                                     # 2024
-    "Poliomielitis": POLIO,                              # sin casos en toda la serie
-    "Parálisis flácida aguda": POLIO,                    # casos 2009-2019
-    "Tétanos": TETANOS,                                  # casos 2008-2014
-    "Tétanos neonatal": TETANOS,                         # sin casos en toda la serie
+    # I-42 y I-52: OJO, estas dos NO se agregan por suma. Ver SERIES_CONTROLADAS.
+    "Parálisis flácida aguda": POLIO,                    # única serie de datos de I-42
+    "Tétanos": TETANOS,                                  # única serie de datos de I-52
+}
+
+# Denominaciones que la normativa agrupa bajo una EDO ya cubierta por otra serie,
+# pero que en el Excel NO son una sucesión histórica: conviven como categorías
+# separadas durante los 17 años (fila propia en las 153 celdas año-provincia).
+# Por eso no se suman. Se mantienen vigiladas: si alguna dejara de estar a cero,
+# el proceso aborta para que el criterio se revise a mano.
+#
+# El riesgo que se evita es conceptual, no numérico: la poliomielitis se detecta
+# A TRAVÉS de la vigilancia de parálisis flácida aguda, de modo que un caso de
+# polio sería también un caso de PFA y sumarlos lo contaría dos veces. Con el
+# tétanos, si «Tétanos» incluyera ya los casos neonatales, sumar «Tétanos
+# neonatal» los duplicaría; no hay documentación que aclare cuál es el criterio.
+SERIES_CONTROLADAS = {
+    "Poliomielitis": (POLIO, "los datos de esta EDO se toman de «Parálisis flácida aguda»"),
+    "Tétanos neonatal": (TETANOS, "los datos de esta EDO se toman de «Tétanos»"),
 }
 
 # grupos cuyas denominaciones se suman: hay que comprobar que no coexisten
@@ -162,8 +186,6 @@ GRUPOS_AGREGADOS = {
     ECOLI: ["Infección por cepas de Escherichia coli productoras de toxina Shiga o Vero",
             "Infección por E. coli productora de toxina shiga o vero (STEC/VTEC)",
             "Infección por E. coli enterohemorrágica"],
-    POLIO: ["Poliomielitis", "Parálisis flácida aguda"],
-    TETANOS: ["Tétanos", "Tétanos neonatal"],
 }
 
 # denominación excluida -> motivo
@@ -203,32 +225,35 @@ def comprobar_cobertura(raw):
     """
     del_excel = {r["enfermedad"].strip() for r in raw
                  if r["provincia"].strip() in PROV_IDX}
-    usadas, excluidas = set(NOMBRE_OFICIAL), set(EXCLUIDAS)
+    usadas = set(NOMBRE_OFICIAL)
+    controladas = set(SERIES_CONTROLADAS)
+    excluidas = set(EXCLUIDAS)
+    total = len(usadas) + len(controladas) + len(excluidas)
 
-    sin_clasificar = del_excel - usadas - excluidas
-    solapadas = usadas & excluidas
-    inventadas = (usadas | excluidas) - del_excel
+    sin_clasificar = del_excel - usadas - controladas - excluidas
+    solapadas = (usadas & controladas) | (usadas & excluidas) | (controladas & excluidas)
+    inventadas = (usadas | controladas | excluidas) - del_excel
 
     print("VALIDACIÓN DE LA CLASIFICACIÓN")
     print("  denominaciones distintas en el Excel : %d" % len(del_excel))
-    print("  utilizadas                           : %d" % len(usadas))
+    print("  utilizadas (aportan datos)           : %d" % len(usadas))
+    print("  controladas (vigiladas, sin aportar) : %d" % len(controladas))
     print("  excluidas                            : %d" % len(excluidas))
-    print("  utilizadas + excluidas               : %d  %s"
-          % (len(usadas) + len(excluidas),
-             "= total" if len(usadas) + len(excluidas) == len(del_excel) else "!= TOTAL"))
+    print("  suma de las tres listas              : %d  %s"
+          % (total, "= total" if total == len(del_excel) else "!= TOTAL"))
     print("  sin clasificar                       : %s" % (sorted(sin_clasificar) or "ninguna"))
-    print("  en ambas listas a la vez (solape)    : %s" % (sorted(solapadas) or "ninguna"))
+    print("  en más de una lista (solape)         : %s" % (sorted(solapadas) or "ninguna"))
     print("  reglas sin denominación real         : %s" % (sorted(inventadas) or "ninguna"))
     print("  EDO resultantes                      : %d" % len(EDO_SELECCIONADAS))
 
     if sin_clasificar:
         sys.exit("ABORTA: denominaciones sin clasificar")
     if solapadas:
-        sys.exit("ABORTA: denominaciones a la vez utilizadas y excluidas")
+        sys.exit("ABORTA: denominaciones en más de una lista")
     if inventadas:
         sys.exit("ABORTA: reglas que no corresponden a ninguna denominación real")
-    if len(usadas) + len(excluidas) != len(del_excel):
-        sys.exit("ABORTA: la suma de utilizadas y excluidas no cuadra con el Excel")
+    if total != len(del_excel):
+        sys.exit("ABORTA: la suma de las tres listas no cuadra con el Excel")
     if len(EDO_SELECCIONADAS) != 56:
         sys.exit("ABORTA: el mapeo produce %d EDO, se esperaban 56" % len(EDO_SELECCIONADAS))
     print()
@@ -259,6 +284,34 @@ def comprobar_solapes(raw):
                      % (destino, choques[:5]))
 
 
+def comprobar_series_controladas(raw):
+    """Aborta si una serie controlada deja de estar a cero.
+
+    Mientras estén a cero, no aportar sus datos y tomar solo la serie principal
+    da exactamente el mismo resultado que sumarlas, pero sin el riesgo de doble
+    conteo. En cuanto aparezca un caso, la decisión deja de ser inocua y hay que
+    revisarla a mano: por eso el proceso se detiene.
+    """
+    print("SERIES CONTROLADAS (no se suman; deben permanecer a cero)")
+    fallos = []
+    for denom, (edo, nota) in sorted(SERIES_CONTROLADAS.items()):
+        casos = sum(r["casos"] or 0 for r in raw
+                    if r["enfermedad"].strip() == denom
+                    and r["provincia"].strip() in PROV_IDX)
+        anios = sorted({int(r["ano"]) for r in raw
+                        if r["enfermedad"].strip() == denom
+                        and r["provincia"].strip() in PROV_IDX})
+        print("  «%s» -> %s" % (denom, edo))
+        print("      %d-%d, %d casos  %s" % (anios[0], anios[-1], casos,
+                                             "OK" if casos == 0 else "¡YA NO ESTÁ A CERO!"))
+        print("      %s" % nota)
+        if casos:
+            fallos.append((denom, casos))
+    if fallos:
+        sys.exit("ABORTA: series controladas con casos, hay que revisar el criterio: %s" % fallos)
+    print()
+
+
 def poblacion_2017(raw):
     """Población implícita de cada provincia, despejada de casos/tasa en 2017."""
     pob = {}
@@ -281,10 +334,9 @@ def construir(raw):
         p = r["provincia"].strip()
         if p not in PROV_IDX:
             continue  # descarta el total regional «CyL» de 2023-2024
-        enf = r["enfermedad"].strip()
-        if enf in EXCLUIDAS:
-            continue
-        nombre = NOMBRE_OFICIAL[enf]
+        nombre = NOMBRE_OFICIAL.get(r["enfermedad"].strip())
+        if nombre is None:
+            continue  # excluida o serie controlada: no aporta datos
         anio = int(r["ano"])
         fila = series[nombre].setdefault(anio, [[0, 0.0] for _ in PROVINCIAS])
         celda = fila[PROV_IDX[p]]
@@ -319,6 +371,7 @@ def main():
     raw = cargar_raw()
     comprobar_cobertura(raw)
     comprobar_solapes(raw)
+    comprobar_series_controladas(raw)
 
     series = construir(raw)
     estimadas = corregir_tasas_2018(series, poblacion_2017(raw))

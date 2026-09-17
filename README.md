@@ -159,19 +159,33 @@ Implementado en `scripts/build_dataset.py`; ahí están las tablas completas.
   congénita, viruela) y la gripe, excluida a propósito. 60 − 5 = 55, **+ Lyme
   = 56**.
 - **79 denominaciones distintas** en el dataset (no 78: la fuente trae las dos
-  grafías de la gripe aviar, con y sin tilde, como categorías separadas) → 61 se
-  utilizan y **18 se excluyen**. El script valida en cada ejecución que la suma
-  cuadra y que ninguna está a la vez en las dos listas.
+  grafías de la gripe aviar, con y sin tilde, como categorías separadas) → 59 se
+  utilizan, 2 son **series controladas** y **18 se excluyen**. El script valida
+  en cada ejecución que las tres listas son disjuntas y suman el total.
 - **Shigelosis:** el Anexo I la escribe «Shigellosis» (doble L). Se conserva en
   la interfaz «Shigelosis», la grafía del dataset, con la correspondencia
   documentada en el script.
 - **Toxoplasmosis: excluida.** El Anexo I recoge «Toxoplasmosis congénita»
   (I-54) y el dataset trae «Toxoplasmosis» sin precisar la forma congénita; no
   se asume la equivalencia sin respaldo documental.
-- **Solo se agregan series que no coexisten.** Comprobado año-provincia: Dengue
-  (2008-22 → 2023-24), E. coli Shiga/Vero (3 etiquetas sucesivas), Polio/PFA y
-  Tétanos/Tétanos neonatal (en estos dos, una de las series está siempre a cero).
-  El script vuelve a comprobarlo en cada ejecución y aborta si dejara de cumplirse.
+- **Solo se agregan series que no coexisten.** Queda comprobado año-provincia y
+  el script lo revalida en cada ejecución, abortando si dejara de cumplirse.
+  Agregaciones reales: **Dengue** (2008-22 → 2023-24) y **E. coli Shiga/Vero**
+  (3 etiquetas sucesivas, 0 celdas compartidas). Son cambios de denominación a
+  lo largo del tiempo.
+- **Polio/PFA y Tétanos/Tétanos neonatal: NO se agregan por suma.** Aquí las dos
+  denominaciones del Excel **no son una sucesión histórica**: coexisten como
+  categorías separadas durante los 17 años, con fila propia en las 153 celdas
+  año-provincia de cada par. Sumarlas sería sumar dos categorías paralelas.
+  El nombre que muestra EDO CyL es el de la entrada normativa (I-42 y I-52),
+  pero **los valores proceden de una sola serie**: «Parálisis flácida aguda» y
+  «Tétanos» respectivamente. Las otras dos quedan como **series controladas**
+  (`SERIES_CONTROLADAS`): no aportan datos y el proceso **aborta si dejan de
+  estar a cero**, para obligar a revisar el criterio a mano.
+  El riesgo evitado es conceptual, no numérico: la poliomielitis se detecta *a
+  través* de la vigilancia de PFA, así que un caso de polio sería también un
+  caso de PFA y la suma lo contaría dos veces; y si «Tétanos» ya incluyera los
+  casos neonatales, sumar «Tétanos neonatal» los duplicaría.
 - **VIH/SIDA: deliberadamente NO agregado.** «Nuevas infecciones por VIH/Sida»
   (2008-2024, 1.622 casos) y «SIDA» (2008-2018, 24 casos) coexisten con casos en
   **13 celdas año-provincia**, con tasas sobre la misma población: son
