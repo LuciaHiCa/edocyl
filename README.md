@@ -35,9 +35,13 @@ interanual).
   Edita este archivo, nunca `index.html` ni `edo-map.html` directamente.
 - `build.py` — genera las dos salidas a partir de `template.html`. Ejecuta
   `python3 build.py` tras cada cambio en la plantilla o en los datos.
-- `scripts/fix_2018_rates.py` — parche de datos: recalcula la tasa de 2018 en
-  `data/edo_compact.json` (ver "Análisis de los datos" abajo). Ya aplicado.
-  Idempotente; solo hay que volver a pasarlo si se regenera el compact.
+- `scripts/build_dataset.py` — **genera `data/edo_compact.json` a partir de
+  `data/edo_raw.json`**, que nunca se modifica. Contiene documentadas todas las
+  reglas: selección de las 55 EDO, mapeo denominación de origen → nombre visible,
+  exclusiones con su motivo, y el recálculo de las tasas de 2018. Aborta si una
+  denominación del dataset queda sin clasificar o si dos denominaciones que se
+  agregan pasaran a tener casos simultáneos. Idempotente.
+  (Sustituye a `scripts/fix_2018_rates.py`, cuya lógica queda integrada.)
 - `index.html` — **lo que sirve GitHub Pages**. Página autónoma: el mismo
   contenido más `<!doctype>/<html>/<head>/<body>` y un reset CSS equivalente al
   que el runtime de Artifact inyectaba (`margin:0`, `color-scheme`, imágenes
@@ -47,14 +51,14 @@ interanual).
 - `data/edo_raw.json` — export completo y sin procesar del dataset oficial
   (10.645 registros, API Opendatasoft).
 - `data/edo_compact.json` — dataset compactado para el frontend:
-  `{ provinces: [9 nombres], diseases: [78 nombres], years: [2008..2024],
+  `{ provinces: [9 nombres], diseases: [55 EDO], years: [2008..2024],
   series: { "<diseaseIdx>": { "<year>": [ [casos,tasa] x9 provincias, en el
-  mismo orden que `provinces` ] } } }`. Generado a partir de `edo_raw.json`
-  normalizando una única variante ortográfica duplicada ("gripe aviar" con/sin
-  tilde → una sola entrada). Verificado: **cero combinaciones
-  enfermedad-año incompletas** (si hay datos, están las 9 provincias).
+  mismo orden que `provinces` ] } } }`. **Archivo generado**: no se edita a mano,
+  lo produce `scripts/build_dataset.py` desde `edo_raw.json`. Contiene solo las
+  55 EDO seleccionadas. Verificado: **cero combinaciones enfermedad-año
+  incompletas** (si hay datos, están las 9 provincias).
   Los pares de **2018 con casos > 0** llevan un tercer elemento `[casos,tasa,1]`:
-  su tasa es estimada (`scripts/fix_2018_rates.py`, ver abajo).
+  su tasa es estimada (`scripts/build_dataset.py`, ver abajo).
 - `data/cyl_provincias.geojson` — límites de las 9 provincias de Castilla y León,
   simplificados con mapshaper (8%) a partir de una fuente pública de provincias
   de España (SRID 4326), **ya corregidos** para el sentido de rotación de
@@ -63,7 +67,7 @@ interanual).
 
 ## Cómo reconstruir y publicar
 ```bash
-# python3 scripts/fix_2018_rates.py   # solo si se ha regenerado edo_compact.json
+python3 scripts/build_dataset.py   # regenera edo_compact.json desde el raw
 python3 build.py          # regenera index.html y edo-map.html
 git add -A && git commit -m "..." && git push
 ```
@@ -144,6 +148,34 @@ headless) en claro y oscuro.
 - Sin enfermedad preseleccionada a propósito (pedido del usuario): al cargar,
   mapa/ranking/evolución muestran estado vacío con mensaje invitando a buscar.
 
+## Selección y normalización de las 55 EDO
+Implementado en `scripts/build_dataset.py`; ahí están las tablas completas.
+
+- **Referencia:** Anexo I de la Orden SSI/445/2015 (60 EDO). Se descartan 4 que
+  no están representadas de forma equivalente en el dataset provincial
+  (encefalitis por garrapatas, linfogranuloma venéreo, toxoplasmosis congénita,
+  viruela) y la gripe, excluida a propósito del proyecto. Quedan **55**.
+- **78 denominaciones** en el dataset → 37 se mantienen, 14 se renombran,
+  9 se agregan en 4 grupos y **19 se excluyen** (incluye las dos grafías de la
+  gripe aviar, con y sin tilde, que la fuente trata como categorías distintas).
+- **Solo se agregan series que no coexisten.** Comprobado año-provincia: Dengue
+  (2008-22 → 2023-24), E. coli Shiga/Vero (3 etiquetas sucesivas), Polio/PFA y
+  Tétanos/Tétanos neonatal (en estos dos, una de las series está siempre a cero).
+  El script vuelve a comprobarlo en cada ejecución y aborta si dejara de cumplirse.
+- **VIH/SIDA: deliberadamente NO agregado.** «Nuevas infecciones por VIH/Sida»
+  (2008-2024, 1.622 casos) y «SIDA» (2008-2018, 24 casos) coexisten con casos en
+  **13 celdas año-provincia**, con tasas sobre la misma población: son
+  indicadores distintos. Se muestra solo la primera, bajo el nombre
+  `VIH/SIDA (nuevas infecciones por VIH/Sida)`. Se comprobó que **ni la Orden
+  SSI/445/2015 ni los metadatos del dataset definen qué mide cada categoría**,
+  por lo que no se la etiqueta como "nuevos diagnósticos" ni nada equivalente.
+- **8 EDO quedan sin ningún caso en 2008-2024** y se conservan a propósito
+  (cólera, difteria, fiebre amarilla, herpes zóster, peste, rabia, rubéola
+  congénita, SARS): que no haya casos declarados también es información.
+- Resultado: **8.262 celdas** enfermedad-año-provincia y **109.323 casos**
+  (antes 78 denominaciones y 742.419 casos; la gripe aportaba 493.963 y la
+  COVID 136.211).
+
 ## Análisis de los datos y rarezas detectadas
 Resumen del análisis hecho sobre `edo_raw.json` (lo relevante está también en la
 sección **"Cuestiones importantes"** de la propia página).
@@ -172,7 +204,7 @@ la variación interanual del total es gripe.
   tasas reales; para las otras 8 provincias la fuente publica `0.0` aunque haya
   miles de casos (Gripe 2018: Valladolid 7 523 casos, tasa 0). Y varias tasas que
   sí trae Ávila en 2018 también son incoherentes (Yersiniosis, 2 casos → 51,7).
-  `scripts/fix_2018_rates.py` sustituye **toda** la columna de tasa de 2018 por
+  `scripts/build_dataset.py` sustituye **toda** la columna de tasa de 2018 por
   `casos ÷ población_2017 × 100 000` (población de 2017 recuperada del propio
   dataset como mediana de `casos/tasa` sobre las filas limpias de 2017,
   dispersión < 1 %). Validación: Gripe de Ávila 2018 estimada = 1 183,7 vs

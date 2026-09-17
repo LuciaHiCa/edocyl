@@ -454,6 +454,14 @@
               <p>El proyecto reutiliza el conjunto de datos «Enfermedades de Declaración Obligatoria. Casos y tasas por provincia», publicado por la Junta de Castilla y León bajo licencia CC BY 4.0. Sus 10.645 registros contienen información sobre año, enfermedad, provincia, casos y tasa. Aunque la fuente denomina este último campo simplemente «Tasa», EDO CyL lo expresa como tasa por 100.000 habitantes, unidad utilizada en los informes epidemiológicos oficiales de la Junta.</p>
             </div>
             <div class="note-entry">
+              <span class="note-entry-title">Enfermedades incluidas</span>
+              <p>EDO CyL muestra las 55 Enfermedades de Declaración Obligatoria seleccionadas a partir del Anexo I de la Orden SSI/445/2015, de 9 de marzo. Como la fuente ha usado denominaciones distintas para una misma enfermedad a lo largo de los años, cada una se normaliza a un único nombre. Quedan fuera la gripe y las categorías que no pueden asignarse con seguridad a una de esas 55, como las agrupadas («Otras ITS», «Meningitis víricas») o las ajenas al Anexo I.</p>
+            </div>
+            <div class="note-entry">
+              <span class="note-entry-title">VIH/SIDA</span>
+              <p>La fuente publica dos series diferenciadas, «Nuevas infecciones por VIH/Sida» y «SIDA», que pueden coexistir en el mismo año y provincia y que representan indicadores distintos. Por ello EDO CyL no las agrega: muestra únicamente la primera, cuyo nombre en la fuente se indica entre paréntesis. Ni la Orden SSI/445/2015 ni los metadatos del conjunto de datos definen qué mide exactamente cada categoría, por lo que no se le atribuye ninguna otra interpretación.</p>
+            </div>
+            <div class="note-entry">
               <span class="note-entry-title">Tratamiento de las tasas de 2018</span>
               <p>Durante la validación de los datos de la fuente se detectó una anomalía en 2018: ocho provincias presentan tasas iguales a cero pese a existir casos declarados. Para evitar una representación incorrecta, EDO CyL estima estas tasas a partir de la población implícita obtenida de los registros válidos de 2017, cuyas estimaciones presentan una dispersión inferior al 1 %. Los valores resultantes no modifican la fuente original y se identifican con ≈ y «tasa estimada».</p>
             </div>
@@ -496,11 +504,11 @@
   var years = DATA.years;                 // [2008..2024]
 
   // ---- notable diseases for quick picks (must exist in dataset) ----
-  var QUICK = ["Gripe","Varicela","Tos Ferina","Sarampión","Parotiditis",
-               "Tuberculosis (cualquier localización)","Sífilis","Infección gonocócica",
-               "Nuevas infecciones por VIH/Sida","Campilobacteriosis",
-               "Salmonelosis de transmisión alimentaria","Legionelosis","Tularemia",
-               "Hepatitis A","Enfermedad meningocócica"].filter(function(n){ return diseases.indexOf(n) > -1; });
+  var QUICK = ["Varicela","Tos ferina","Sarampión","Parotiditis","Tuberculosis",
+               "Sífilis","Infección gonocócica","VIH/SIDA (nuevas infecciones por VIH/Sida)",
+               "Campilobacteriosis","Salmonelosis","Legionelosis","Tularemia",
+               "Hepatitis A","Enfermedad meningocócica",
+               "Enfermedad neumocócica invasora"].filter(function(n){ return diseases.indexOf(n) > -1; });
 
   var state = {
     diseaseIdx: null,   // no disease preselected — the user searches or picks one
